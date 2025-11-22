@@ -52,7 +52,7 @@ class BinanceWebSocketClient {
       }
     });
 
-    this.ws.on('error', (error) => {
+    this.ws.on('error', (error: Error) => {
       console.error('Binance WebSocket error:', error);
     });
 

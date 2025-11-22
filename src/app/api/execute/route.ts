@@ -89,7 +89,7 @@ def calculate_profit(buy_price, sell_price, quantity):
     return (sell_price - buy_price) * quantity
 
 result = calculate_profit(100, 150, 10)
-print(f"Profit: ${result}")
+print(f"Profit: $\{result}")
 `,
       inputs: {},
     },

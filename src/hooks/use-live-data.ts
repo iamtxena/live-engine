@@ -21,18 +21,16 @@ export interface TickData {
 export function useLiveData(asset: string) {
   const [data, setData] = useState<TickData | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>('WebSocket connection not implemented yet');
 
   useEffect(() => {
     // TODO: Connect to WebSocket or SSE
     // For now, this is a placeholder
-
-    setIsConnected(false);
-    setError('WebSocket connection not implemented yet');
+    // When implementing, connect here and update states based on external events
 
     // Cleanup
     return () => {
-      setIsConnected(false);
+      // Disconnect WebSocket when implemented
     };
   }, [asset]);
 

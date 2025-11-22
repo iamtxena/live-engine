@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Store in Supabase
-    const insertData = candles.map((candle) => ({
+    const insertData = candles.map((candle: any) => ({
       asset: symbol.toLowerCase(),
       timestamp: candle.timestamp,
       open: candle.open,

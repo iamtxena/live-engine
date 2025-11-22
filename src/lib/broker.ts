@@ -1,4 +1,4 @@
-import ccxt from 'ccxt';
+import * as ccxt from 'ccxt';
 
 /**
  * Unified broker wrapper using ccxt
@@ -50,13 +50,13 @@ class BrokerClient {
    * Initialize the appropriate exchange
    */
   private initializeExchange(): ccxt.Exchange {
-    const ExchangeClass = ccxt[this.brokerName as keyof typeof ccxt] as any;
+    const ExchangeClass = ccxt[this.brokerName as keyof typeof ccxt] as typeof ccxt.Exchange;
 
     if (!ExchangeClass) {
       throw new Error(`Unsupported broker: ${this.brokerName}`);
     }
 
-    const exchangeConfig: ccxt.ExchangeOptions = {
+    const exchangeConfig: Partial<ccxt.ConstructorArgs> = {
       apiKey: this.config.apiKey,
       secret: this.config.apiSecret,
       enableRateLimit: true,
@@ -143,8 +143,8 @@ class BrokerClient {
 
       // Return only non-zero balances
       return Object.fromEntries(
-        Object.entries(free).filter(([_, amount]) => amount > 0)
-      );
+        Object.entries(free).filter(([_, amount]) => (amount as number) > 0)
+      ) as Record<string, number>;
     } catch (error) {
       console.error('Error fetching balance:', error);
       throw error;
@@ -157,7 +157,7 @@ class BrokerClient {
   async getOpenOrders(symbol?: string): Promise<OrderResult[]> {
     try {
       const orders = await this.exchange.fetchOpenOrders(symbol);
-      return orders.map((order) => this.formatOrder(order));
+      return orders.map((order: any) => this.formatOrder(order));
     } catch (error) {
       console.error('Error fetching open orders:', error);
       throw error;
@@ -216,8 +216,8 @@ class BrokerClient {
       timestamp: order.timestamp || Date.now(),
       fee: order.fee
         ? {
-            cost: order.fee.cost,
-            currency: order.fee.currency,
+            cost: Number(order.fee.cost),
+            currency: String(order.fee.currency),
           }
         : undefined,
     };
