@@ -39,3 +39,6 @@ next-env.d.ts
 
 # CLI build
 /dist
+
+# Internal documentation (not for public repo)
+instructions.md
