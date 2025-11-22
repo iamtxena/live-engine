@@ -39,18 +39,22 @@ pnpm cli convert
 ```
 src/
 ├── app/
-│   ├── (dashboard)/        # Protected dashboard routes
-│   │   ├── page.tsx        # Main dashboard
-│   │   ├── assets/         # Asset management
-│   │   ├── paper/          # Paper trading
-│   │   └── live/           # Live trading
-│   ├── (marketing)/        # Public marketing pages
+│   ├── (dashboard)/        # Protected dashboard routes (route group)
+│   │   ├── dashboard/      # Main dashboard at /dashboard
+│   │   │   └── page.tsx
+│   │   ├── assets/         # Asset management at /assets
+│   │   ├── paper/          # Paper trading at /paper
+│   │   ├── live/           # Live trading at /live
+│   │   └── layout.tsx      # Dashboard layout wrapper
+│   ├── (marketing)/        # Public marketing pages (route group)
+│   │   └── page.tsx        # Landing page at /
 │   ├── api/
 │   │   ├── convert/        # Python → TypeScript AI conversion
 │   │   ├── execute/        # Trade execution
 │   │   ├── historical/     # Historical data fetch
 │   │   └── websocket/      # WebSocket feed management
-│   └── layout.tsx
+│   ├── layout.tsx          # Root layout
+│   └── globals.css
 ├── lib/                    # Core business logic
 │   ├── binance.ts          # Binance WebSocket + REST API
 │   ├── broker.ts           # Unified ccxt broker wrapper
@@ -65,7 +69,8 @@ src/
 │   └── ui/                 # shadcn/ui components
 ├── hooks/
 │   └── use-live-data.ts    # Real-time data hooks
-└── cli/                    # Commander-based CLI (stub)
+├── cli/                    # Commander-based CLI (stub)
+└── proxy.ts                # Next.js 16 proxy (renamed from middleware.ts)
 ```
 
 ### Core Libraries (src/lib/)
@@ -171,10 +176,19 @@ Executes trades via broker (currently recommends /api/convert instead).
 - Avoid `any` types
 - Use path alias `@/*` for imports from `src/`
 
-### Next.js Patterns
+### Next.js 16 Patterns
 - Uses App Router with route groups: `(dashboard)`, `(marketing)`
+- **Route groups don't add path segments:** `(dashboard)/dashboard/page.tsx` → `/dashboard`
+- **Proxy instead of Middleware:** Next.js 16 renamed `middleware.ts` to `proxy.ts` ([docs](https://nextjs.org/docs/messages/middleware-to-proxy))
 - Server Components by default; mark Client Components with `'use client'`
-- Middleware in `src/middleware.ts` for Clerk authentication
+- Proxy in `src/proxy.ts` for Clerk authentication
+- TSConfig: `jsx: "react-jsx"` (automatic runtime)
+
+### Tailwind CSS v4
+- Uses `@tailwindcss/postcss` plugin (not the old `tailwindcss` plugin)
+- PostCSS config: `plugins: { '@tailwindcss/postcss': {} }`
+- No autoprefixer needed (built into Tailwind v4)
+- Import in `globals.css`: `@import "tailwindcss"`
 
 ### AI SDK with LangSmith
 **CRITICAL:** Always wrap AI SDK calls with LangSmith and flush traces in API routes.
@@ -261,7 +275,13 @@ const response = await fetch('https://engine.lona.agency/api/convert', {
 
 ## Important Notes
 
-- Next.js 16 and Tailwind CSS v4 use different config than previous versions
+### Next.js 16 & Tailwind v4 Setup
+- **Proxy not Middleware:** Use `src/proxy.ts` (not `middleware.ts`)
+- **Tailwind PostCSS:** Must use `@tailwindcss/postcss` package
+- **Route Groups:** Don't add path segments; `(dashboard)/page.tsx` conflicts with `(marketing)/page.tsx` at `/`
+- **TSConfig:** Next.js auto-configures `jsx: "react-jsx"` on first run
+
+### General Notes
 - CLI commands (`pnpm cli`) are stubs; real functionality is in web dashboard
 - Always use `supabaseAdmin` for server-side database operations
 - WebSocket client runs as singleton; avoid multiple instances

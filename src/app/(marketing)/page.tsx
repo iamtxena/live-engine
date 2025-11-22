@@ -9,7 +9,7 @@ export default function LandingPage() {
     <div className="flex min-h-screen flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center">
+        <div className="container flex h-14 items-center px-8 md:px-12 lg:px-16">
           <div className="mr-4 flex">
             <Link href="/" className="mr-6 flex items-center">
               <Logo size="sm" />
@@ -45,7 +45,7 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="container flex flex-col items-center gap-4 pt-16 pb-8 md:pt-24 md:pb-12">
+      <section className="container flex flex-col items-center gap-4 pt-16 pb-8 px-8 md:pt-24 md:pb-12 md:px-12 lg:px-16">
         <Badge variant="secondary" className="mb-4">
           Next.js 16 • TypeScript • Tailwind CSS v4
         </Badge>
@@ -75,7 +75,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section id="features" className="container py-16">
+      <section id="features" className="container py-16 px-8 md:px-12 lg:px-16">
         <h2 className="mb-8 text-center text-3xl font-bold">Features</h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card className="p-6">
@@ -120,7 +120,7 @@ export default function LandingPage() {
       </section>
 
       {/* Tech Stack */}
-      <section id="stack" className="container py-16">
+      <section id="stack" className="container py-16 px-8 md:px-12 lg:px-16">
         <h2 className="mb-8 text-center text-3xl font-bold">Tech Stack</h2>
         <div className="flex flex-wrap justify-center gap-3">
           {[
@@ -146,19 +146,8 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="mt-auto border-t py-6">
-        <div className="container flex flex-col items-center justify-between gap-4 md:flex-row">
-          <p className="text-sm text-muted-foreground">
-            Made by{' '}
-            <a
-              href="https://github.com/iamtxena"
-              target="_blank"
-              className="font-medium underline-offset-4 hover:underline"
-            >
-              @iamtxena
-            </a>{' '}
-            – learning trading the hard way since 2025 ☢️
-          </p>
-          <p className="text-sm text-muted-foreground">MIT License</p>
+        <div className="container px-8 md:px-12 lg:px-16">
+          {/* Footer content removed */}
         </div>
       </footer>
     </div>
