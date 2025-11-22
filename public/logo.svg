@@ -1,0 +1,25 @@
+<svg width="160" height="40" viewBox="0 0 160 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Lightning icon circle -->
+  <circle cx="20" cy="20" r="18" fill="url(#logoGradient)"/>
+
+  <!-- Lightning bolt -->
+  <path d="M22 8L15 20H20L18 32L25 20H20L22 8Z" fill="white"/>
+
+  <!-- "LIVE" text -->
+  <text x="45" y="27" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="700" fill="currentColor">
+    LIVE
+  </text>
+
+  <!-- "ENGINE" text -->
+  <text x="82" y="27" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="400" fill="currentColor" opacity="0.7">
+    ENGINE
+  </text>
+
+  <!-- Gradient definition -->
+  <defs>
+    <linearGradient id="logoGradient" x1="2" y1="2" x2="38" y2="38" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+  </defs>
+</svg>
