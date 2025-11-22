@@ -12,7 +12,7 @@ export default function DashboardLayout({
     <div className="flex min-h-screen flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background">
-        <div className="container flex h-14 items-center px-8 md:px-12 lg:px-16">
+        <div className="container flex h-14 items-center">
           <div className="mr-4 flex">
             <Link href="/dashboard" className="mr-6 flex items-center">
               <Logo size="sm" />
@@ -52,12 +52,12 @@ export default function DashboardLayout({
 
       {/* Main Content */}
       <main className="flex-1">
-        <div className="container py-6 px-8 md:px-12 lg:px-16">{children}</div>
+        <div className="container py-6">{children}</div>
       </main>
 
       {/* Footer */}
       <footer className="mt-auto border-t py-6">
-        <div className="container flex items-center justify-between text-sm text-muted-foreground px-8 md:px-12 lg:px-16">
+        <div className="container flex items-center justify-between text-sm text-muted-foreground">
           <p>© {new Date().getFullYear()} Live Engine. All rights reserved.</p>
           <div className="flex items-center space-x-4">
             <Link

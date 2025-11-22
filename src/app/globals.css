@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@layer base {
+  .container {
+    @apply mx-auto px-4 sm:px-6 md:px-8;
+  }
+}
+
 :root {
   --background: hsl(0 0% 100%);
   --foreground: hsl(222.2 84% 4.9%);
