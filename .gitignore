@@ -42,3 +42,7 @@ next-env.d.ts
 
 # Internal documentation (not for public repo)
 instructions.md
+
+# Supabase
+.supabase/
+.temp/

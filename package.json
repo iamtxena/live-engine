@@ -25,6 +25,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "commander": "^14.0.2",
+    "dotenv": "^17.2.3",
     "langsmith": "^0.3.81",
     "lightweight-charts": "^5.0.9",
     "lucide-react": "^0.554.0",

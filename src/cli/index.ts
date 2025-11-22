@@ -10,7 +10,10 @@
  *   pnpm cli convert       - Convert Python code
  */
 
+import 'dotenv/config';
 import { Command } from 'commander';
+import { fetchHistoricalCandles, type Asset } from '../lib/binance';
+import { supabaseAdmin } from '../lib/supabase';
 
 const program = new Command();
 
@@ -34,10 +37,50 @@ program
   .description('Download historical market data')
   .option('-i, --interval <interval>', 'Candle interval', '1m')
   .option('-l, --limit <limit>', 'Number of candles', '500')
-  .action((symbol, options) => {
-    console.log(`Downloading ${options.limit} ${options.interval} candles for ${symbol}...`);
-    console.log('⚠️  CLI mode is not implemented yet.');
-    console.log('👉 Use the API: POST /api/historical');
+  .action(async (symbol, options) => {
+    try {
+      console.log(`📥 Downloading ${options.limit} ${options.interval} candles for ${symbol.toUpperCase()}...`);
+
+      // Fetch from Binance
+      const candles = await fetchHistoricalCandles(
+        symbol.toLowerCase() as Asset,
+        options.interval,
+        parseInt(options.limit)
+      );
+
+      console.log(`✓ Fetched ${candles.length} candles from Binance`);
+
+      // Store in Supabase
+      const insertData = candles.map((candle: any) => ({
+        asset: symbol.toLowerCase(),
+        timestamp: candle.timestamp,
+        open: candle.open,
+        high: candle.high,
+        low: candle.low,
+        close: candle.close,
+        volume: candle.volume,
+        source: 'binance',
+      }));
+
+      const { error } = await supabaseAdmin
+        .from('market_data')
+        .upsert(insertData, {
+          onConflict: 'asset,timestamp',
+        });
+
+      if (error) {
+        console.error('❌ Error storing data:', error.message);
+        process.exit(1);
+      }
+
+      console.log(`✓ Stored ${candles.length} candles in Supabase`);
+      console.log(`\n📊 Data range: ${candles[candles.length - 1].timestamp} to ${candles[0].timestamp}`);
+      console.log(`💰 Latest price: $${candles[0].close}`);
+
+    } catch (error) {
+      console.error('❌ Download failed:', error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
   });
 
 program
