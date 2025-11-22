@@ -146,8 +146,24 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="mt-auto border-t py-6">
-        <div className="container px-8 md:px-12 lg:px-16">
-          {/* Footer content removed */}
+        <div className="container flex items-center justify-between text-sm text-muted-foreground px-8 md:px-12 lg:px-16">
+          <p>© {new Date().getFullYear()} Live Engine. All rights reserved.</p>
+          <div className="flex items-center space-x-4">
+            <Link
+              href="https://github.com/iamtxena/live-engine"
+              target="_blank"
+              className="hover:text-primary"
+            >
+              GitHub
+            </Link>
+            <Link
+              href="https://lona.agency"
+              target="_blank"
+              className="hover:text-primary"
+            >
+              Lona
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
