@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Logo } from '@/components/logo';
+import { LonaBanner } from '@/components/marketing/lona-banner';
 
 export default function LandingPage() {
   return (
@@ -72,6 +73,11 @@ export default function LandingPage() {
             </Link>
           </Button>
         </div>
+      </section>
+
+      {/* Lona Banner */}
+      <section className="container py-8">
+        <LonaBanner variant="full" />
       </section>
 
       {/* Features */}

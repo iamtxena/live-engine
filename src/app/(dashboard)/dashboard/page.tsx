@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useMarketStore } from '@/lib/stores/market-store';
+import { LonaBanner } from '@/components/marketing/lona-banner';
 
 const TRACKED_ASSETS = [
   { id: 'btcusdt', label: 'BTC/USDT' },
@@ -71,6 +72,8 @@ export default function DashboardPage() {
           Monitor markets, execute trades, and manage your portfolio
         </p>
       </div>
+
+      <LonaBanner variant="compact" dismissible />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {TRACKED_ASSETS.map((asset) => {

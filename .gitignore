@@ -46,3 +46,5 @@ instructions.md
 # Supabase
 .supabase/
 .temp/
+
+.cursor/mcp.json

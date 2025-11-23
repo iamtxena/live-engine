@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
         .from('portfolios')
         .select('*')
         .eq('user_id', userId)
-        .eq('type', 'paper');
+        .eq('mode', 'paper');
 
       if (error) throw error;
 
@@ -117,9 +117,10 @@ export async function POST(request: NextRequest) {
         .from('portfolios')
         .insert({
           user_id: userId,
-          type: 'paper',
+          name: 'Paper Trading Portfolio',
+          mode: 'paper',
           balance: initialBalance || 10000,
-          initial_balance: initialBalance || 10000,
+          broker: 'paper',
         })
         .select()
         .single();
