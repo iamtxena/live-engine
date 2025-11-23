@@ -1,15 +1,69 @@
-import { Card } from '@/components/ui/card';
+'use client';
+
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useMarketStore } from '@/lib/stores/market-store';
+import { useHistoricalData } from '@/lib/hooks/use-market-data';
+import { CandlestickChart } from '@/components/charts/candlestick-chart';
+import { LiveTicker } from '@/components/trading/live-ticker';
+import { TradesTable } from '@/components/trading/trades-table';
+
+const ASSETS = ['btcusdt', 'ethusdt', 'bnbusdt', 'solusdt'];
+
+const ASSET_TABS = [
+  { id: 'btc', asset: 'btcusdt', label: 'BTC/USDT' },
+  { id: 'eth', asset: 'ethusdt', label: 'ETH/USDT' },
+  { id: 'bnb', asset: 'bnbusdt', label: 'BNB/USDT' },
+  { id: 'sol', asset: 'solusdt', label: 'SOL/USDT' },
+];
 
 export default function AssetsPage() {
-  const assets = [
-    { symbol: 'BTC/USDT', name: 'Bitcoin', price: '--,---', change: '+0.00%' },
-    { symbol: 'ETH/USDT', name: 'Ethereum', price: '--,---', change: '+0.00%' },
-    { symbol: 'BNB/USDT', name: 'Binance Coin', price: '---', change: '+0.00%' },
-    { symbol: 'SOL/USDT', name: 'Solana', price: '---', change: '+0.00%' },
-  ];
+  const [selectedAsset, setSelectedAsset] = useState('btcusdt');
+
+  // Zustand store for real-time market data
+  const { tickers, isConnected, error, connectStream, disconnectStream } = useMarketStore();
+
+  // TanStack Query for historical chart data
+  const { data: historicalData = [] } = useHistoricalData({
+    asset: selectedAsset,
+    limit: 100,
+    interval: '1m',
+  });
+
+  // Transform MarketDataRow to CandleData format
+  const chartData = historicalData.map((row) => ({
+    time: row.timestamp,
+    open: row.open,
+    high: row.high,
+    low: row.low,
+    close: row.close,
+  }));
+
+  const startWebSocket = async () => {
+    try {
+      const response = await fetch('/api/websocket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assets: ASSETS }),
+      });
+
+      if (response.ok) {
+        connectStream(ASSETS);
+      }
+    } catch (err) {
+      console.error('Error starting WebSocket:', err);
+    }
+  };
+
+  const stopWebSocket = async () => {
+    try {
+      await fetch('/api/websocket', { method: 'DELETE' });
+      disconnectStream();
+    } catch (err) {
+      console.error('Error stopping WebSocket:', err);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -22,109 +76,53 @@ export default function AssetsPage() {
           </p>
         </div>
         <div className="flex space-x-2">
-          <Button>Start WebSocket</Button>
-          <Button variant="outline">Download Historical</Button>
+          {!isConnected ? (
+            <Button onClick={startWebSocket}>Start WebSocket</Button>
+          ) : (
+            <Button variant="destructive" onClick={stopWebSocket}>
+              Stop WebSocket
+            </Button>
+          )}
         </div>
       </div>
 
+      {error && (
+        <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+
       {/* Asset Tabs */}
-      <Tabs defaultValue="btc" className="w-full">
+      <Tabs defaultValue="btc" className="w-full" onValueChange={(val) => {
+        const tab = ASSET_TABS.find(t => t.id === val);
+        if (tab) setSelectedAsset(tab.asset);
+      }}>
         <TabsList>
-          <TabsTrigger value="btc">BTC/USDT</TabsTrigger>
-          <TabsTrigger value="eth">ETH/USDT</TabsTrigger>
-          <TabsTrigger value="bnb">BNB/USDT</TabsTrigger>
-          <TabsTrigger value="sol">SOL/USDT</TabsTrigger>
+          {ASSET_TABS.map(tab => (
+            <TabsTrigger key={tab.id} value={tab.id}>
+              {tab.label}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
-        <TabsContent value="btc" className="space-y-4">
-          <Card className="p-6">
-            <div className="mb-4 flex items-center justify-between">
+        {ASSET_TABS.map(tab => (
+          <TabsContent key={tab.id} value={tab.id} className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="md:col-span-2 space-y-4">
+                <CandlestickChart data={chartData} height={400} />
+                <TradesTable asset={tab.asset} limit={50} />
+              </div>
               <div>
-                <h2 className="text-2xl font-bold">Bitcoin (BTC/USDT)</h2>
-                <p className="text-sm text-muted-foreground">Binance Spot</p>
-              </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold">$--,---</div>
-                <Badge variant="secondary">+0.00%</Badge>
-              </div>
-            </div>
-
-            {/* Chart Placeholder */}
-            <div className="flex h-96 items-center justify-center rounded-lg border bg-muted/30">
-              <div className="text-center">
-                <p className="mb-2 text-lg font-medium">TradingView Chart</p>
-                <p className="text-sm text-muted-foreground">
-                  Connect WebSocket to view real-time data
-                </p>
+                <LiveTicker
+                  asset={tab.asset}
+                  tickData={tickers.get(tab.asset)}
+                  isConnected={isConnected}
+                />
               </div>
             </div>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="eth" className="space-y-4">
-          <Card className="p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold">Ethereum (ETH/USDT)</h2>
-                <p className="text-sm text-muted-foreground">Binance Spot</p>
-              </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold">$--,---</div>
-                <Badge variant="secondary">+0.00%</Badge>
-              </div>
-            </div>
-
-            <div className="flex h-96 items-center justify-center rounded-lg border bg-muted/30">
-              <div className="text-center">
-                <p className="mb-2 text-lg font-medium">TradingView Chart</p>
-                <p className="text-sm text-muted-foreground">
-                  Connect WebSocket to view real-time data
-                </p>
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="bnb" className="space-y-4">
-          <Card className="p-6">
-            <div className="flex h-96 items-center justify-center rounded-lg border bg-muted/30">
-              <p className="text-sm text-muted-foreground">BNB/USDT chart placeholder</p>
-            </div>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="sol" className="space-y-4">
-          <Card className="p-6">
-            <div className="flex h-96 items-center justify-center rounded-lg border bg-muted/30">
-              <p className="text-sm text-muted-foreground">SOL/USDT chart placeholder</p>
-            </div>
-          </Card>
-        </TabsContent>
+          </TabsContent>
+        ))}
       </Tabs>
-
-      {/* Asset List */}
-      <Card className="p-6">
-        <h2 className="mb-4 text-xl font-semibold">All Assets</h2>
-        <div className="space-y-2">
-          {assets.map((asset) => (
-            <div
-              key={asset.symbol}
-              className="flex items-center justify-between rounded-lg border p-4"
-            >
-              <div>
-                <div className="font-medium">{asset.symbol}</div>
-                <div className="text-sm text-muted-foreground">{asset.name}</div>
-              </div>
-              <div className="text-right">
-                <div className="font-mono">${asset.price}</div>
-                <Badge variant="secondary" className="text-xs">
-                  {asset.change}
-                </Badge>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
     </div>
   );
 }
