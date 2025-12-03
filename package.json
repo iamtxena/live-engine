@@ -30,7 +30,7 @@
     "langsmith": "^0.3.81",
     "lightweight-charts": "^5.0.9",
     "lucide-react": "^0.554.0",
-    "next": "16.0.3",
+    "next": "16.0.7",
     "protobufjs": "^7.5.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
