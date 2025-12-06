@@ -161,9 +161,14 @@ export function getBinanceWSClient(assets: Asset[] = ['btcusdt', 'ethusdt']) {
 export async function fetchHistoricalCandles(
   symbol: Asset,
   interval: '1m' | '5m' | '15m' | '1h' | '1d' = '1m',
-  limit: number = 500
+  limit: number = 500,
+  endTime?: number
 ) {
-  const url = `https://api.binance.com/api/v3/klines?symbol=${symbol.toUpperCase()}&interval=${interval}&limit=${limit}`;
+  let url = `https://api.binance.com/api/v3/klines?symbol=${symbol.toUpperCase()}&interval=${interval}&limit=${limit}`;
+
+  if (endTime) {
+    url += `&endTime=${endTime}`;
+  }
 
   try {
     const response = await fetch(url);
