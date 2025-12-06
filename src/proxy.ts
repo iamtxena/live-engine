@@ -1,12 +1,12 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
 // Define protected routes (dashboard)
-// Note: /api/convert is PUBLIC for Lona integration
 const isProtectedRoute = createRouteMatcher([
   '/dashboard(.*)',
   '/api/websocket(.*)',
   '/api/historical(.*)',
   '/api/execute(.*)',
+  '/api/convert(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
