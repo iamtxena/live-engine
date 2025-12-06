@@ -17,6 +17,9 @@ import 'dotenv/config';
 import { Command } from 'commander';
 import { fetchHistoricalCandles, type Asset } from '../lib/binance';
 import { supabaseAdmin } from '../lib/supabase';
+import { convertPythonToTypescript, validateTypescriptCode, explainStrategy } from '../lib/ai-convert';
+import { flushTraces } from '../lib/langsmith';
+import { getProvider } from '../lib/ai-config';
 import { writeFileSync, mkdirSync, readFileSync, readdirSync, existsSync, createWriteStream } from 'fs';
 import { join, dirname } from 'path';
 import { execSync } from 'child_process';
@@ -286,12 +289,82 @@ program
 
 program
   .command('convert')
-  .description('Convert Python code to TypeScript using Grok AI')
+  .description('Convert Python code to TypeScript using AI')
   .option('-f, --file <path>', 'Python file path')
-  .action(() => {
-    console.log('Converting Python code to TypeScript...');
-    console.log('⚠️  CLI mode is not implemented yet.');
-    console.log('👉 Use the API: POST /api/convert');
+  .option('-c, --code <code>', 'Python code string')
+  .option('-o, --output <path>', 'Output TypeScript file path')
+  .option('--validate', 'Also validate the generated code')
+  .option('--explain', 'Also explain the strategy')
+  .action(async (options) => {
+    try {
+      const provider = getProvider();
+      console.log(`🤖 Using AI provider: ${provider}`);
+
+      let pythonCode: string;
+
+      if (options.file) {
+        if (!existsSync(options.file)) {
+          console.error(`❌ File not found: ${options.file}`);
+          process.exit(1);
+        }
+        pythonCode = readFileSync(options.file, 'utf-8');
+        console.log(`📄 Reading: ${options.file}`);
+      } else if (options.code) {
+        pythonCode = options.code;
+      } else {
+        console.error('❌ Please provide --file or --code');
+        console.log('Usage: pnpm cli convert --file strategy.py');
+        console.log('       pnpm cli convert --code "def strategy(): ..."');
+        process.exit(1);
+      }
+
+      console.log(`\n🔄 Converting Python to TypeScript...`);
+      console.log(`   Code length: ${pythonCode.length} characters\n`);
+
+      const result = await convertPythonToTypescript(pythonCode);
+
+      console.log('✅ Conversion complete!\n');
+      console.log('📦 Dependencies:', result.dependencies.join(', ') || 'none');
+      console.log('📝 Intent:', result.original_intent);
+      console.log('💡 Notes:', result.notes);
+
+      // Output TypeScript code
+      if (options.output) {
+        writeFileSync(options.output, result.typescript_code);
+        console.log(`\n💾 Saved to: ${options.output}`);
+      } else {
+        console.log('\n--- Generated TypeScript ---');
+        console.log(result.typescript_code);
+        console.log('--- End ---\n');
+      }
+
+      // Optional validation
+      if (options.validate) {
+        console.log('\n🔍 Validating generated code...');
+        const validation = await validateTypescriptCode(result.typescript_code);
+        console.log(`   Valid: ${validation.isValid ? '✅' : '❌'}`);
+        if (validation.issues.length > 0) {
+          console.log('   Issues:', validation.issues.join(', '));
+        }
+        if (validation.suggestions.length > 0) {
+          console.log('   Suggestions:', validation.suggestions.join(', '));
+        }
+      }
+
+      // Optional explanation
+      if (options.explain) {
+        console.log('\n📖 Strategy Explanation:');
+        const explanation = await explainStrategy(pythonCode);
+        console.log(explanation);
+      }
+
+      await flushTraces();
+
+    } catch (error) {
+      console.error('❌ Conversion failed:', error instanceof Error ? error.message : error);
+      await flushTraces();
+      process.exit(1);
+    }
   });
 
 // ============================================
