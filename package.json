@@ -12,8 +12,11 @@
     "cli": "tsx src/cli/index.ts"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.53",
+    "@ai-sdk/google": "^2.0.44",
+    "@ai-sdk/openai": "^2.0.77",
     "@ai-sdk/xai": "^2.0.35",
-    "@clerk/nextjs": "^6.35.4",
+    "@clerk/nextjs": "^6.36.0",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.4",
@@ -32,8 +35,8 @@
     "lucide-react": "^0.554.0",
     "next": "^16.0.7",
     "protobufjs": "^7.5.4",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
     "tailwind-merge": "^3.4.0",
     "tsx": "^4.20.6",
     "ws": "^8.18.3",
