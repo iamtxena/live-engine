@@ -32,16 +32,34 @@ export default function DashboardLayout({
               Assets
             </Link>
             <Link
+              href="/dashboard/data"
+              className="text-sm font-medium transition-colors hover:text-primary"
+            >
+              Data
+            </Link>
+            <Link
+              href="/dashboard/convert"
+              className="text-sm font-medium transition-colors hover:text-primary"
+            >
+              Convert
+            </Link>
+            <Link
+              href="/dashboard/strategies"
+              className="text-sm font-medium transition-colors hover:text-primary"
+            >
+              Strategies
+            </Link>
+            <Link
               href="/dashboard/paper"
               className="text-sm font-medium transition-colors hover:text-primary"
             >
-              Paper Trading
+              Paper
             </Link>
             <Link
               href="/dashboard/live"
               className="text-sm font-medium transition-colors hover:text-primary"
             >
-              Live Trading
+              Live
             </Link>
           </nav>
           <div className="flex items-center space-x-4">
