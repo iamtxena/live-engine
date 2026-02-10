@@ -82,7 +82,7 @@ export default function StrategyDetailPage({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [asset, setAsset] = useState('btcusdt');
-  const [interval, setInterval] = useState('1m');
+  const [strategyInterval, setStrategyInterval] = useState('1m');
   const [hasChanges, setHasChanges] = useState(false);
 
   // Initialize form when data loads
@@ -93,7 +93,7 @@ export default function StrategyDetailPage({
       setName(data.strategy.name);
       setDescription(data.strategy.description || '');
       setAsset(data.strategy.asset);
-      setInterval(data.strategy.interval);
+      setStrategyInterval(data.strategy.interval);
     }
   }
 
@@ -105,7 +105,7 @@ export default function StrategyDetailPage({
       python_code: pythonCode,
       typescript_code: typescriptCode,
       asset,
-      interval,
+      interval: strategyInterval,
     });
     setHasChanges(false);
   };
@@ -295,9 +295,9 @@ export default function StrategyDetailPage({
               <div className="space-y-2">
                 <Label htmlFor="interval">Interval</Label>
                 <Select
-                  value={interval}
+                  value={strategyInterval}
                   onValueChange={(val) => {
-                    setInterval(val);
+                    setStrategyInterval(val);
                     setHasChanges(true);
                   }}
                 >
