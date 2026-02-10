@@ -6,6 +6,9 @@ export async function getAuthUserId(req?: Request): Promise<string> {
     const serviceKey = process.env.SERVICE_API_KEY;
     const authHeader = req.headers.get('authorization');
     if (serviceKey && authHeader === `Bearer ${serviceKey}`) {
+      // Allow caller to specify which user to act on behalf of
+      const onBehalfOf = req.headers.get('x-user-id');
+      if (onBehalfOf) return onBehalfOf;
       return 'service-account';
     }
   }
