@@ -7,9 +7,18 @@ const isProtectedRoute = createRouteMatcher([
   '/api/historical(.*)',
   '/api/execute(.*)',
   '/api/convert(.*)',
+  '/api/paper(.*)',
+  '/api/strategies(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
+  // Service key bypass for CLI/machine access
+  const serviceKey = process.env.SERVICE_API_KEY;
+  const authHeader = req.headers.get('authorization');
+  if (serviceKey && authHeader === `Bearer ${serviceKey}`) {
+    return;
+  }
+
   // Protect dashboard and API routes
   if (isProtectedRoute(req)) {
     await auth.protect();

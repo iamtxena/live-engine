@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getAuthUserId } from '@/lib/service-auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
 /**
@@ -10,10 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const userId = await getAuthUserId(request);
 
     const { id } = await params;
     const { searchParams } = new URL(request.url);
@@ -59,6 +56,9 @@ export async function GET(
       offset,
     });
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Strategy logs GET error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

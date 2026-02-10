@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getAuthUserId } from '@/lib/service-auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import type { CreateStrategyInput, UpdateStrategyInput } from '@/lib/types/strategy';
 
@@ -9,10 +9,7 @@ import type { CreateStrategyInput, UpdateStrategyInput } from '@/lib/types/strat
  */
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const userId = await getAuthUserId(request);
 
     const { searchParams } = new URL(request.url);
     const strategyId = searchParams.get('id');
@@ -58,6 +55,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ strategies: strategies || [] });
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Strategies GET error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
@@ -68,10 +68,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const userId = await getAuthUserId(request);
 
     const body: CreateStrategyInput = await request.json();
 
@@ -109,6 +106,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ strategy }, { status: 201 });
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Strategies POST error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
@@ -119,10 +119,7 @@ export async function POST(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const userId = await getAuthUserId(request);
 
     const { id, ...updates }: { id: string } & UpdateStrategyInput = await request.json();
 
@@ -159,6 +156,9 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ strategy });
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Strategies PATCH error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
@@ -169,10 +169,7 @@ export async function PATCH(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const userId = await getAuthUserId(request);
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -195,6 +192,9 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Strategies DELETE error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
