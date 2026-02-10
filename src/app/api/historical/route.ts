@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchHistoricalCandles, type Asset } from '@/lib/binance';
+import { fetchHistoricalCandles, type Asset, type Interval } from '@/lib/binance';
 import { supabaseAdmin } from '@/lib/supabase';
 
 /**
  * API Route: /api/historical
  *
  * Fetch and store historical market data
- * Supports bulk download of candles (1m, 5m, 1h, 1d, etc.)
+ * Supports date range via startTime and endTime (ISO strings or Unix ms)
  */
 
 export async function POST(request: NextRequest) {
   try {
-    const { symbol, interval, limit } = await request.json();
+    const { symbol, interval, startTime, endTime, limit } = await request.json();
 
     if (!symbol) {
       return NextResponse.json(
@@ -20,12 +20,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Convert ISO strings to Unix ms if provided
+    const startMs = startTime
+      ? typeof startTime === 'string'
+        ? new Date(startTime).getTime()
+        : startTime
+      : undefined;
+    const endMs = endTime
+      ? typeof endTime === 'string'
+        ? new Date(endTime).getTime()
+        : endTime
+      : undefined;
+
     // Fetch historical candles from Binance
-    const candles = await fetchHistoricalCandles(
-      symbol as Asset,
-      interval || '1m',
-      limit || 500
-    );
+    const candles = await fetchHistoricalCandles({
+      symbol: symbol as Asset,
+      interval: (interval || '1m') as Interval,
+      limit: limit || 1000,
+      startTime: startMs,
+      endTime: endMs,
+    });
 
     // Store in Supabase
     const insertData = candles.map((candle: any) => ({

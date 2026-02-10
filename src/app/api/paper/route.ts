@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getAuthUserId } from '@/lib/service-auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getCachedMarketTick } from '@/lib/redis';
 
@@ -27,10 +27,8 @@ interface Position {
  */
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const userId = await getAuthUserId(request);
+
 
     const { searchParams } = new URL(request.url);
     const portfolioId = searchParams.get('portfolioId');
@@ -83,6 +81,9 @@ export async function GET(request: NextRequest) {
       trades: trades || [],
     });
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Paper trading GET error:', error);
     return NextResponse.json(
       {
@@ -99,10 +100,8 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const userId = await getAuthUserId(request);
+
 
     const body = await request.json();
     const { action, portfolioId, trade, initialBalance } = body as {
@@ -205,6 +204,9 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Paper trading POST error:', error);
     return NextResponse.json(
       {

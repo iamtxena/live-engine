@@ -155,24 +155,65 @@ export function getBinanceWSClient(assets: Asset[] = ['btcusdt', 'ethusdt']) {
   return binanceWSClient;
 }
 
+export type Interval = '1m' | '5m' | '15m' | '1h' | '4h' | '1d';
+
+export interface FetchHistoricalOptions {
+  symbol: Asset | string;
+  interval?: Interval;
+  limit?: number;
+  startTime?: number;
+  endTime?: number;
+}
+
 /**
  * Fetch historical data from Binance REST API
+ * Supports date range via startTime and endTime (Unix ms)
  */
 export async function fetchHistoricalCandles(
-  symbol: Asset,
-  interval: '1m' | '5m' | '15m' | '1h' | '1d' = '1m',
+  symbolOrOptions: Asset | FetchHistoricalOptions,
+  interval: Interval = '1m',
   limit: number = 500,
   endTime?: number
 ) {
-  let url = `https://api.binance.com/api/v3/klines?symbol=${symbol.toUpperCase()}&interval=${interval}&limit=${limit}`;
-
-  if (endTime) {
-    url += `&endTime=${endTime}`;
+  // Support both old signature and new options object
+  let options: FetchHistoricalOptions;
+  if (typeof symbolOrOptions === 'string') {
+    options = { symbol: symbolOrOptions, interval, limit, endTime };
+  } else {
+    options = symbolOrOptions;
   }
+
+  const {
+    symbol,
+    interval: intv = '1m',
+    limit: lim = 1000,
+    startTime,
+    endTime: end,
+  } = options;
+
+  const params = new URLSearchParams({
+    symbol: symbol.toUpperCase(),
+    interval: intv,
+    limit: String(lim),
+  });
+
+  if (startTime) {
+    params.append('startTime', String(startTime));
+  }
+
+  if (end) {
+    params.append('endTime', String(end));
+  }
+
+  const url = `https://api.binance.com/api/v3/klines?${params.toString()}`;
 
   try {
     const response = await fetch(url);
     const data = await response.json();
+
+    if (data.code && data.msg) {
+      throw new Error(`Binance API error: ${data.msg}`);
+    }
 
     return data.map((candle: any) => ({
       timestamp: new Date(candle[0]).toISOString(),
