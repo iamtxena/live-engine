@@ -2,8 +2,8 @@ import { Redis } from '@upstash/redis';
 
 // Initialize Upstash Redis client
 export const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+  url: process.env.UPSTASH_REDIS_REST_URL ?? '',
+  token: process.env.UPSTASH_REDIS_REST_TOKEN ?? '',
 });
 
 /**
@@ -16,8 +16,7 @@ export const redis = new Redis({
 
 export const cacheKeys = {
   marketLatest: (asset: string) => `market:${asset}:latest`,
-  market1m: (asset: string, timestamp: number) =>
-    `market:${asset}:1m:${timestamp}`,
+  market1m: (asset: string, timestamp: number) => `market:${asset}:1m:${timestamp}`,
   tradeQueue: 'queue:trades',
   dataQueue: 'queue:data',
   userSession: (userId: string) => `session:${userId}`,
@@ -28,7 +27,7 @@ export const cacheKeys = {
  */
 export async function cacheMarketTick(
   asset: string,
-  data: { price: number; volume: number; timestamp: number }
+  data: { price: number; volume: number; timestamp: number },
 ) {
   const key = cacheKeys.marketLatest(asset);
   await redis.set(key, JSON.stringify(data), { ex: 60 }); // 1 min TTL

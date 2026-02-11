@@ -24,7 +24,7 @@ interface HurstParams {
 }
 
 // strategy.ts
-import * as ccxt from 'ccxt';
+import type * as ccxt from 'ccxt';
 import { SMA } from 'technicalindicators';
 
 class HurstCycleBottoms implements IStrategy {
@@ -53,7 +53,7 @@ class HurstCycleBottoms implements IStrategy {
   private entry_price: number | null = null;
   private stop_loss_price: number | null = null;
   private signal_bar_idx: number | null = null;
-  private position_size: number = 0;
+  private position_size = 0;
 
   async init(broker: ccxt.Exchange, symbol: string, params?: Partial<HurstParams>): Promise<void> {
     this.broker = broker;
@@ -78,8 +78,8 @@ class HurstCycleBottoms implements IStrategy {
 
   private computeIndicators(): void {
     const length = this.closes.length;
-    this.ma = new Array(length).fill(NaN);
-    this.lower_env = new Array(length).fill(NaN);
+    this.ma = new Array(length).fill(Number.NaN);
+    this.lower_env = new Array(length).fill(Number.NaN);
     this.cross_up = new Array(length).fill(0);
     this.cross_down = new Array(length).fill(0);
 
@@ -104,7 +104,7 @@ class HurstCycleBottoms implements IStrategy {
       const close_curr = this.closes[i];
       const close_prev = this.closes[i - 1];
 
-      if (!isNaN(ma_curr) && !isNaN(ma_prev)) {
+      if (!Number.isNaN(ma_curr) && !Number.isNaN(ma_prev)) {
         // cross_up: close crosses over ma
         if (close_curr > ma_curr && close_prev <= ma_prev) {
           this.cross_up[i] = 1;
@@ -126,7 +126,7 @@ class HurstCycleBottoms implements IStrategy {
       const balance = await this.broker.fetchBalance();
       const cash = balance.free[this.quoteCurrency] || 0;
       const risk_amount = cash * this.params.risk_pct;
-      let risk_per_unit = this.entry_price - stop_loss;
+      const risk_per_unit = this.entry_price - stop_loss;
 
       if (risk_per_unit <= 0) {
         return 0;
@@ -158,8 +158,8 @@ class HurstCycleBottoms implements IStrategy {
       }
 
       // Update history
-      this.closes = candles.map(c => c.close);
-      this.lows = candles.map(c => c.low);
+      this.closes = candles.map((c) => c.close);
+      this.lows = candles.map((c) => c.low);
       this.computeIndicators();
 
       const current_idx = length - 1;
@@ -170,7 +170,7 @@ class HurstCycleBottoms implements IStrategy {
           const order = await this.broker.fetchOrder(this.pendingOrderId, this.symbol);
           if (order.status === 'closed' || order.status === 'filled') {
             if (order.side === 'buy') {
-              this.entry_price = order.average || this.entry_price!;
+              this.entry_price = order.average || (this.entry_price ?? 0);
               if (this.signal_bar_idx !== null) {
                 const prev_idx = this.signal_bar_idx - 1;
                 if (prev_idx >= 0) {
@@ -213,7 +213,7 @@ class HurstCycleBottoms implements IStrategy {
       // Signal conditions
       const current_low = this.lows[current_idx];
       const current_lower = this.lower_env[current_idx];
-      const dipped = !isNaN(current_lower) && current_low <= current_lower * 1.005;
+      const dipped = !Number.isNaN(current_lower) && current_low <= current_lower * 1.005;
 
       let cross_up_confirmed: boolean;
       if (this.params.confirmBars === 0) {
@@ -224,7 +224,8 @@ class HurstCycleBottoms implements IStrategy {
       }
 
       const min_bars_between = Math.max(1, Math.round(this.params.P * this.params.minSpaceFrac));
-      const spacing_ok = this.last_signal_bar === null || (current_idx - this.last_signal_bar > min_bars_between);
+      const spacing_ok =
+        this.last_signal_bar === null || current_idx - this.last_signal_bar > min_bars_between;
 
       const bottom_signal = dipped && cross_up_confirmed && spacing_ok;
 
@@ -248,7 +249,9 @@ class HurstCycleBottoms implements IStrategy {
       }
       // Exit logic
       else if (pos_size > 0) {
-        const should_exit = this.cross_down[current_idx] > 0 || (this.stop_loss_price && this.closes[current_idx] <= this.stop_loss_price);
+        const should_exit =
+          this.cross_down[current_idx] > 0 ||
+          (this.stop_loss_price && this.closes[current_idx] <= this.stop_loss_price);
         if (should_exit) {
           try {
             const order = await this.broker.createMarketSellOrder(this.symbol, pos_size);
@@ -270,4 +273,4 @@ class HurstCycleBottoms implements IStrategy {
   }
 }
 
-export { HurstCycleBottoms, IStrategy, Candle, HurstParams };
+export { HurstCycleBottoms, type IStrategy, type Candle, type HurstParams };

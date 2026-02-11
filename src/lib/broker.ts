@@ -41,7 +41,7 @@ class BrokerClient {
       apiKey?: string;
       apiSecret?: string;
       testnet?: boolean;
-    }
+    },
   ) {
     this.exchange = this.initializeExchange();
   }
@@ -108,19 +108,15 @@ class BrokerClient {
     try {
       await this.exchange.loadMarkets();
 
-      let order;
+      let order: ccxt.Order;
       if (params.type === 'market') {
-        order = await this.exchange.createMarketOrder(
-          params.symbol,
-          params.side,
-          params.amount
-        );
+        order = await this.exchange.createMarketOrder(params.symbol, params.side, params.amount);
       } else if (params.type === 'limit' && params.price) {
         order = await this.exchange.createLimitOrder(
           params.symbol,
           params.side,
           params.amount,
-          params.price
+          params.price,
         );
       } else {
         throw new Error('Invalid order type or missing price for limit order');
@@ -143,7 +139,7 @@ class BrokerClient {
 
       // Return only non-zero balances
       return Object.fromEntries(
-        Object.entries(free).filter(([_, amount]) => (amount as number) > 0)
+        Object.entries(free).filter(([_, amount]) => (amount as number) > 0),
       ) as Record<string, number>;
     } catch (error) {
       console.error('Error fetching balance:', error);
@@ -157,7 +153,7 @@ class BrokerClient {
   async getOpenOrders(symbol?: string): Promise<OrderResult[]> {
     try {
       const orders = await this.exchange.fetchOpenOrders(symbol);
-      return orders.map((order: any) => this.formatOrder(order));
+      return orders.map((order) => this.formatOrder(order));
     } catch (error) {
       console.error('Error fetching open orders:', error);
       throw error;
@@ -212,7 +208,7 @@ class BrokerClient {
       type: order.type as OrderType,
       amount: order.amount,
       price: order.price || 0,
-      status: order.status as any,
+      status: (order.status || 'pending') as OrderResult['status'],
       timestamp: order.timestamp || Date.now(),
       fee: order.fee
         ? {
@@ -233,7 +229,7 @@ export function createBrokerClient(
     apiKey?: string;
     apiSecret?: string;
     testnet?: boolean;
-  } = {}
+  } = {},
 ): BrokerClient {
   return new BrokerClient(broker, options);
 }
@@ -241,9 +237,10 @@ export function createBrokerClient(
 /**
  * Get default broker credentials from environment
  */
-export function getDefaultBrokerCredentials(
-  broker: BrokerName
-): { apiKey: string; apiSecret: string } {
+export function getDefaultBrokerCredentials(broker: BrokerName): {
+  apiKey: string;
+  apiSecret: string;
+} {
   switch (broker) {
     case 'binance':
       return {

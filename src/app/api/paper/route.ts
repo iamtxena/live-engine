@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { getCachedMarketTick } from '@/lib/redis';
 import { getAuthUserId } from '@/lib/service-auth';
 import { supabaseAdmin } from '@/lib/supabase';
-import { getCachedMarketTick } from '@/lib/redis';
+import { type NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 
@@ -28,7 +28,6 @@ interface Position {
 export async function GET(request: NextRequest) {
   try {
     const userId = await getAuthUserId(request);
-
 
     const { searchParams } = new URL(request.url);
     const portfolioId = searchParams.get('portfolioId');
@@ -65,10 +64,7 @@ export async function GET(request: NextRequest) {
 
     const positions = await calculatePositions(trades || []);
 
-    const totalValue = await calculatePortfolioValue(
-      portfolio.balance,
-      positions
-    );
+    const totalValue = await calculatePortfolioValue(portfolio.balance, positions);
 
     return NextResponse.json({
       portfolio: {
@@ -89,7 +85,7 @@ export async function GET(request: NextRequest) {
       {
         error: error instanceof Error ? error.message : 'Failed to fetch paper trading data',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -101,7 +97,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const userId = await getAuthUserId(request);
-
 
     const body = await request.json();
     const { action, portfolioId, trade, initialBalance } = body as {
@@ -146,23 +141,19 @@ export async function POST(request: NextRequest) {
       if (!tickData) {
         return NextResponse.json(
           { error: 'Market data not available for this asset' },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
-      const executionPrice = trade.type === 'market'
-        ? tickData.price
-        : trade.price || tickData.price;
+      const executionPrice =
+        trade.type === 'market' ? tickData.price : trade.price || tickData.price;
 
       const totalCost = trade.amount * executionPrice;
 
       let newBalance = portfolio.balance;
       if (trade.side === 'buy') {
         if (totalCost > portfolio.balance) {
-          return NextResponse.json(
-            { error: 'Insufficient balance' },
-            { status: 400 }
-          );
+          return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
         }
         newBalance -= totalCost;
       } else {
@@ -199,10 +190,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json(
-      { error: 'Invalid action or missing parameters' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Invalid action or missing parameters' }, { status: 400 });
   } catch (error) {
     if (error instanceof Error && error.message === 'Unauthorized') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -212,7 +200,7 @@ export async function POST(request: NextRequest) {
       {
         error: error instanceof Error ? error.message : 'Failed to execute paper trade',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -220,7 +208,9 @@ export async function POST(request: NextRequest) {
 /**
  * Calculate positions from trade history
  */
-async function calculatePositions(trades: any[]): Promise<Position[]> {
+async function calculatePositions(
+  trades: { status: string; asset: string; side: string; amount: number; price: number }[],
+): Promise<Position[]> {
   const positionMap = new Map<string, { amount: number; totalCost: number }>();
 
   for (const trade of trades) {
@@ -266,12 +256,9 @@ async function calculatePositions(trades: any[]): Promise<Position[]> {
  */
 async function calculatePortfolioValue(
   cashBalance: number,
-  positions: Position[]
+  positions: Position[],
 ): Promise<number> {
-  const positionsValue = positions.reduce(
-    (sum, pos) => sum + pos.amount * pos.currentPrice,
-    0
-  );
+  const positionsValue = positions.reduce((sum, pos) => sum + pos.amount * pos.currentPrice, 0);
 
   return cashBalance + positionsValue;
 }

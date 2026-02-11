@@ -94,7 +94,8 @@ export function PositionsCard({ positions }: PositionsCardProps) {
                           {formatCurrency(position.unrealizedPnl)}
                         </div>
                         <div className="text-xs">
-                          ({isProfitable ? '+' : ''}{pnlPercent}%)
+                          ({isProfitable ? '+' : ''}
+                          {pnlPercent}%)
                         </div>
                       </div>
                     </TableCell>

@@ -39,7 +39,8 @@ export function TradesTable({ asset, limit = 50 }: TradesTableProps) {
   const formatVolume = (volume: number) => {
     if (volume >= 1_000_000) {
       return `${(volume / 1_000_000).toFixed(2)}M`;
-    } else if (volume >= 1_000) {
+    }
+    if (volume >= 1_000) {
       return `${(volume / 1_000).toFixed(2)}K`;
     }
     return volume.toFixed(2);
@@ -86,15 +87,11 @@ export function TradesTable({ asset, limit = 50 }: TradesTableProps) {
             <TableBody>
               {trades.map((trade) => (
                 <TableRow key={trade.id}>
-                  <TableCell className="font-mono text-sm">
-                    {formatTime(trade.timestamp)}
-                  </TableCell>
+                  <TableCell className="font-mono text-sm">{formatTime(trade.timestamp)}</TableCell>
                   <TableCell className="font-medium uppercase">
                     {trade.asset.replace('usdt', '/USDT')}
                   </TableCell>
-                  <TableCell className="text-right font-mono">
-                    {formatPrice(trade.close)}
-                  </TableCell>
+                  <TableCell className="text-right font-mono">{formatPrice(trade.close)}</TableCell>
                   <TableCell className="text-right font-mono">
                     {formatVolume(trade.volume)}
                   </TableCell>

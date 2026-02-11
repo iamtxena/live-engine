@@ -1,10 +1,10 @@
 'use client';
 
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 
 interface Strategy {
   id: string;
@@ -47,9 +47,7 @@ export default function StrategiesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Strategies</h1>
-          <p className="text-muted-foreground">
-            Manage and monitor your trading strategies
-          </p>
+          <p className="text-muted-foreground">Manage and monitor your trading strategies</p>
         </div>
         <Link href="/dashboard/convert">
           <Button>New Strategy</Button>
@@ -91,9 +89,7 @@ export default function StrategiesPage() {
                       </p>
                     )}
                   </div>
-                  <Badge variant={STATUS_COLORS[strategy.status]}>
-                    {strategy.status}
-                  </Badge>
+                  <Badge variant={STATUS_COLORS[strategy.status]}>{strategy.status}</Badge>
                 </div>
                 <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
                   <span>{strategy.asset.toUpperCase()}</span>

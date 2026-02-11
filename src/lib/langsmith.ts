@@ -29,8 +29,8 @@ export function createTraceable<TInput, TOutput>(
   fn: (input: TInput) => Promise<TOutput>,
   options?: {
     tags?: string[];
-    metadata?: Record<string, any>;
-  }
+    metadata?: Record<string, unknown>;
+  },
 ) {
   return traceable(fn, {
     name,
@@ -45,7 +45,7 @@ export function createTraceable<TInput, TOutput>(
  */
 export const tracedConversion = createTraceable<
   { pythonCode: string; context?: string },
-  any
+  { pythonCode: string; context?: string }
 >('python-to-typescript', async ({ pythonCode, context }) => {
   // This will be called from ai-convert.ts
   // LangSmith will automatically capture the trace

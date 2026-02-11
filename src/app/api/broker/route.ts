@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import {
-  createBrokerClient,
-  getDefaultBrokerCredentials,
   type BrokerName,
   type OrderParams,
+  createBrokerClient,
+  getDefaultBrokerCredentials,
 } from '@/lib/broker';
+import { auth } from '@clerk/nextjs/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
       {
         error: error instanceof Error ? error.message : 'Failed to fetch broker data',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -67,24 +67,22 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { broker = 'bybit', testnet = true, order } = body as {
+    const {
+      broker = 'bybit',
+      testnet = true,
+      order,
+    } = body as {
       broker?: BrokerName;
       testnet?: boolean;
       order: OrderParams;
     };
 
     if (!order || !order.symbol || !order.side || !order.type || !order.amount) {
-      return NextResponse.json(
-        { error: 'Missing required order parameters' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required order parameters' }, { status: 400 });
     }
 
     if (order.type === 'limit' && !order.price) {
-      return NextResponse.json(
-        { error: 'Price is required for limit orders' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Price is required for limit orders' }, { status: 400 });
     }
 
     const credentials = getDefaultBrokerCredentials(broker);
@@ -107,7 +105,7 @@ export async function POST(request: NextRequest) {
       {
         error: error instanceof Error ? error.message : 'Failed to place order',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -130,10 +128,7 @@ export async function DELETE(request: NextRequest) {
     const testnet = searchParams.get('testnet') !== 'false';
 
     if (!orderId || !symbol) {
-      return NextResponse.json(
-        { error: 'Missing orderId or symbol' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing orderId or symbol' }, { status: 400 });
     }
 
     const credentials = getDefaultBrokerCredentials(broker);
@@ -157,7 +152,7 @@ export async function DELETE(request: NextRequest) {
       {
         error: error instanceof Error ? error.message : 'Failed to cancel order',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

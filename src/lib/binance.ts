@@ -21,7 +21,7 @@ export type TickData = {
 
 class BinanceWebSocketClient {
   private ws: WebSocket | null = null;
-  private reconnectInterval: number = 5000;
+  private reconnectInterval = 5000;
   private heartbeatInterval: NodeJS.Timeout | null = null;
 
   constructor(private assets: Asset[]) {}
@@ -66,19 +66,22 @@ class BinanceWebSocketClient {
   /**
    * Handle incoming ticker messages
    */
-  private async handleMessage(message: any) {
+  private async handleMessage(message: {
+    stream?: string;
+    data?: { s: string; c: string; v: string; E: number; h: string; l: string; P: string };
+  }) {
     if (message.stream && message.data) {
       const ticker = message.data;
       const asset = ticker.s.toLowerCase(); // btcusdt, ethusdt, etc.
 
       const tickData: TickData = {
         asset,
-        price: parseFloat(ticker.c), // Current price
-        volume: parseFloat(ticker.v), // 24h volume
+        price: Number.parseFloat(ticker.c), // Current price
+        volume: Number.parseFloat(ticker.v), // 24h volume
         timestamp: ticker.E, // Event time
-        high24h: parseFloat(ticker.h),
-        low24h: parseFloat(ticker.l),
-        change24h: parseFloat(ticker.P), // Price change percentage
+        high24h: Number.parseFloat(ticker.h),
+        low24h: Number.parseFloat(ticker.l),
+        change24h: Number.parseFloat(ticker.P), // Price change percentage
       };
 
       // Cache in Redis (fast access)
@@ -172,8 +175,8 @@ export interface FetchHistoricalOptions {
 export async function fetchHistoricalCandles(
   symbolOrOptions: Asset | FetchHistoricalOptions,
   interval: Interval = '1m',
-  limit: number = 500,
-  endTime?: number
+  limit = 500,
+  endTime?: number,
 ) {
   // Support both old signature and new options object
   let options: FetchHistoricalOptions;
@@ -183,13 +186,7 @@ export async function fetchHistoricalCandles(
     options = symbolOrOptions;
   }
 
-  const {
-    symbol,
-    interval: intv = '1m',
-    limit: lim = 1000,
-    startTime,
-    endTime: end,
-  } = options;
+  const { symbol, interval: intv = '1m', limit: lim = 1000, startTime, endTime: end } = options;
 
   const params = new URLSearchParams({
     symbol: symbol.toUpperCase(),
@@ -215,13 +212,13 @@ export async function fetchHistoricalCandles(
       throw new Error(`Binance API error: ${data.msg}`);
     }
 
-    return data.map((candle: any) => ({
+    return data.map((candle: (string | number)[]) => ({
       timestamp: new Date(candle[0]).toISOString(),
-      open: parseFloat(candle[1]),
-      high: parseFloat(candle[2]),
-      low: parseFloat(candle[3]),
-      close: parseFloat(candle[4]),
-      volume: parseFloat(candle[5]),
+      open: Number.parseFloat(String(candle[1])),
+      high: Number.parseFloat(String(candle[2])),
+      low: Number.parseFloat(String(candle[3])),
+      close: Number.parseFloat(String(candle[4])),
+      volume: Number.parseFloat(String(candle[5])),
     }));
   } catch (error) {
     console.error('Error fetching historical candles:', error);

@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { wrapAISDK } from 'langsmith/experimental/vercel';
 import * as ai from 'ai';
+import { wrapAISDK } from 'langsmith/experimental/vercel';
+import { z } from 'zod';
 import { getModelForTask } from './ai-config';
 
 // Wrap AI SDK with LangSmith observability
@@ -27,7 +27,7 @@ export type ConversionResult = z.infer<typeof conversionSchema>;
  */
 export async function convertPythonToTypescript(
   pythonCode: string,
-  context?: string
+  context?: string,
 ): Promise<ConversionResult> {
   const { model, temperature, provider, modelId } = getModelForTask('conversion');
   console.log(`[AI Convert] Using ${provider}:${modelId} for conversion`);
@@ -93,7 +93,9 @@ Provide a complete TypeScript implementation that:
     return result;
   } catch (error) {
     console.error('Error converting Python to TypeScript:', error);
-    throw new Error(`Failed to convert code: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Failed to convert code: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 
@@ -151,7 +153,8 @@ export async function explainStrategy(pythonCode: string): Promise<string> {
 
   const { text } = await wrappedGenerateText({
     model,
-    system: `You are a trading strategy analyst. Explain trading code in clear, simple language that a non-programmer can understand.`,
+    system:
+      'You are a trading strategy analyst. Explain trading code in clear, simple language that a non-programmer can understand.',
     prompt: `Explain this trading strategy in 2-3 paragraphs:\n\n\`\`\`python\n${pythonCode}\n\`\`\`\n\nInclude:
 - What the strategy does
 - When it buys/sells

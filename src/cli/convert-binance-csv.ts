@@ -13,8 +13,8 @@
  *   pnpm tsx src/cli/convert-binance-csv.ts data/binance/btcusdt/1m/BTCUSDT-1m-2025-10.csv btcusdt
  */
 
-import { readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 function convertUnixToISO(unix: number): string {
   // Binance Data Portal uses microseconds (16 digits), convert to milliseconds (13 digits)
@@ -26,7 +26,7 @@ function convertCSV(inputPath: string, symbol: string, outputPath?: string) {
   console.log(`📄 Reading: ${inputPath}`);
 
   const input = readFileSync(inputPath, 'utf-8');
-  const lines = input.split('\n').filter(line => line.trim());
+  const lines = input.split('\n').filter((line) => line.trim());
 
   // Skip header line
   const dataLines = lines.slice(1);
@@ -35,15 +35,17 @@ function convertCSV(inputPath: string, symbol: string, outputPath?: string) {
 
   // Convert to Lona format
   const lonaHeader = 'Timestamp,Symbol,Open,High,Low,Close,Volume\n';
-  const lonaRows = dataLines.map(line => {
-    const parts = line.split(',');
-    const [open_time, open, high, low, close, volume] = parts;
+  const lonaRows = dataLines
+    .map((line) => {
+      const parts = line.split(',');
+      const [open_time, open, high, low, close, volume] = parts;
 
-    const timestamp = convertUnixToISO(parseInt(open_time));
-    const symbolName = `${symbol.toUpperCase()}-PERPETUAL`;
+      const timestamp = convertUnixToISO(Number.parseInt(open_time));
+      const symbolName = `${symbol.toUpperCase()}-PERPETUAL`;
 
-    return `${timestamp},${symbolName},${open},${high},${low},${close},${volume}`;
-  }).join('\n');
+      return `${timestamp},${symbolName},${open},${high},${low},${close},${volume}`;
+    })
+    .join('\n');
 
   const output = lonaHeader + lonaRows;
 
@@ -63,7 +65,9 @@ function convertCSV(inputPath: string, symbol: string, outputPath?: string) {
 const args = process.argv.slice(2);
 if (args.length < 2) {
   console.error('Usage: pnpm tsx src/cli/convert-binance-csv.ts <input-csv> <symbol> [output-csv]');
-  console.error('Example: pnpm tsx src/cli/convert-binance-csv.ts data/binance/btcusdt/1m/BTCUSDT-1m-2025-10.csv btcusdt');
+  console.error(
+    'Example: pnpm tsx src/cli/convert-binance-csv.ts data/binance/btcusdt/1m/BTCUSDT-1m-2025-10.csv btcusdt',
+  );
   process.exit(1);
 }
 

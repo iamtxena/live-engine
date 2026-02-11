@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -13,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState } from 'react';
 
 type OrderFormProps = {
   asset: string;
@@ -46,24 +46,24 @@ export function OrderForm({ asset, currentPrice, balance, onSubmit }: OrderFormP
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (side: 'buy' | 'sell') => {
-    if (!amount || parseFloat(amount) <= 0) {
+    if (!amount || Number.parseFloat(amount) <= 0) {
       alert('Please enter a valid amount');
       return;
     }
 
-    if (orderType === 'limit' && (!price || parseFloat(price) <= 0)) {
+    if (orderType === 'limit' && (!price || Number.parseFloat(price) <= 0)) {
       alert('Please enter a valid price for limit order');
       return;
     }
 
-    const orderAmount = parseFloat(amount);
-    const orderPrice = orderType === 'limit' ? parseFloat(price) : undefined;
+    const orderAmount = Number.parseFloat(amount);
+    const orderPrice = orderType === 'limit' ? Number.parseFloat(price) : undefined;
 
     const totalCost = orderPrice
       ? orderAmount * orderPrice
       : currentPrice
-      ? orderAmount * currentPrice
-      : 0;
+        ? orderAmount * currentPrice
+        : 0;
 
     if (side === 'buy' && totalCost > balance) {
       alert('Insufficient balance');
@@ -97,16 +97,16 @@ export function OrderForm({ asset, currentPrice, balance, onSubmit }: OrderFormP
   };
 
   const estimatedTotal = () => {
-    const amt = parseFloat(amount) || 0;
-    const prc = orderType === 'market'
-      ? currentPrice || 0
-      : parseFloat(price) || 0;
+    const amt = Number.parseFloat(amount) || 0;
+    const prc = orderType === 'market' ? currentPrice || 0 : Number.parseFloat(price) || 0;
     return amt * prc;
   };
 
   return (
     <Card className="p-4">
-      <h3 className="text-lg font-semibold mb-4">Place Order - {asset.toUpperCase().replace('USDT', '/USDT')}</h3>
+      <h3 className="text-lg font-semibold mb-4">
+        Place Order - {asset.toUpperCase().replace('USDT', '/USDT')}
+      </h3>
 
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-2">

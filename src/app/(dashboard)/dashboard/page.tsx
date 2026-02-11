@@ -1,12 +1,12 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import Link from 'next/link';
-import { useMarketStore } from '@/lib/stores/market-store';
 import { LonaBanner } from '@/components/marketing/lona-banner';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { useMarketStore } from '@/lib/stores/market-store';
+import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 
 const TRACKED_ASSETS = [
   { id: 'btcusdt', label: 'BTC/USDT' },
@@ -81,16 +81,11 @@ export default function DashboardPage() {
           return (
             <Card key={asset.id} className="p-6">
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-muted-foreground">
-                  {asset.label}
-                </span>
+                <span className="text-sm font-medium text-muted-foreground">{asset.label}</span>
                 <span className="text-2xl font-bold">
                   {tickData ? formatPrice(tickData.price) : '$--,---'}
                 </span>
-                <Badge
-                  variant={isConnected ? 'default' : 'secondary'}
-                  className="w-fit"
-                >
+                <Badge variant={isConnected ? 'default' : 'secondary'} className="w-fit">
                   {isConnected ? 'Live' : 'Disconnected'}
                 </Badge>
               </div>
@@ -102,9 +97,7 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="p-6">
           <div className="flex flex-col space-y-1">
-            <span className="text-sm font-medium text-muted-foreground">
-              Portfolio Value
-            </span>
+            <span className="text-sm font-medium text-muted-foreground">Portfolio Value</span>
             <span className="text-2xl font-bold">
               {portfolio ? formatCurrency(portfolio.totalValue) : '$0.00'}
             </span>
@@ -116,9 +109,7 @@ export default function DashboardPage() {
 
         <Card className="p-6">
           <div className="flex flex-col space-y-1">
-            <span className="text-sm font-medium text-muted-foreground">
-              Total P&L
-            </span>
+            <span className="text-sm font-medium text-muted-foreground">Total P&L</span>
             <span
               className={`text-2xl font-bold ${
                 portfolio?.pnl >= 0 ? 'text-green-500' : 'text-red-500'
@@ -128,10 +119,7 @@ export default function DashboardPage() {
                 ? `${portfolio.pnl >= 0 ? '+' : ''}${formatCurrency(portfolio.pnl)}`
                 : '$0.00'}
             </span>
-            <Badge
-              variant={portfolio?.pnl >= 0 ? 'default' : 'destructive'}
-              className="w-fit"
-            >
+            <Badge variant={portfolio?.pnl >= 0 ? 'default' : 'destructive'} className="w-fit">
               {portfolio
                 ? `${portfolio.pnl >= 0 ? '+' : ''}${portfolio.pnlPercent.toFixed(2)}%`
                 : '0.00%'}
@@ -141,9 +129,7 @@ export default function DashboardPage() {
 
         <Card className="p-6">
           <div className="flex flex-col space-y-1">
-            <span className="text-sm font-medium text-muted-foreground">
-              Open Positions
-            </span>
+            <span className="text-sm font-medium text-muted-foreground">Open Positions</span>
             <span className="text-2xl font-bold">{positions.length}</span>
             <Badge variant="outline" className="w-fit">
               {positions.length === 0 ? 'No active trades' : `${positions.length} positions`}

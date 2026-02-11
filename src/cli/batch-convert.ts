@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { readdirSync, readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 function convertUnixToISO(unix: number): string {
   const unixMs = unix > 9999999999999 ? Math.floor(unix / 1000) : unix;
@@ -10,17 +10,19 @@ function convertUnixToISO(unix: number): string {
 
 function convertCSV(inputPath: string, symbol: string, outputPath: string) {
   const input = readFileSync(inputPath, 'utf-8');
-  const lines = input.split('\n').filter(line => line.trim());
+  const lines = input.split('\n').filter((line) => line.trim());
   const dataLines = lines.slice(1);
 
   const lonaHeader = 'Timestamp,Symbol,Open,High,Low,Close,Volume\n';
-  const lonaRows = dataLines.map(line => {
-    const parts = line.split(',');
-    const [open_time, open, high, low, close, volume] = parts;
-    const timestamp = convertUnixToISO(parseInt(open_time));
-    const symbolName = `${symbol.toUpperCase()}-PERPETUAL`;
-    return `${timestamp},${symbolName},${open},${high},${low},${close},${volume}`;
-  }).join('\n');
+  const lonaRows = dataLines
+    .map((line) => {
+      const parts = line.split(',');
+      const [open_time, open, high, low, close, volume] = parts;
+      const timestamp = convertUnixToISO(Number.parseInt(open_time));
+      const symbolName = `${symbol.toUpperCase()}-PERPETUAL`;
+      return `${timestamp},${symbolName},${open},${high},${low},${close},${volume}`;
+    })
+    .join('\n');
 
   writeFileSync(outputPath, lonaHeader + lonaRows);
   return dataLines.length;
@@ -32,7 +34,7 @@ const symbol = process.argv[3] || 'btcusdt';
 console.log(`🔄 Converting all CSV files in ${dir}...`);
 
 const files = readdirSync(dir)
-  .filter(f => f.endsWith('.csv') && !f.endsWith('-lona.csv'))
+  .filter((f) => f.endsWith('.csv') && !f.endsWith('-lona.csv'))
   .sort();
 
 let count = 0;

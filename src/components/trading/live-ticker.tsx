@@ -1,8 +1,8 @@
 'use client';
 
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MarketTickData } from '@/lib/stores/market-store';
+import { Card } from '@/components/ui/card';
+import type { MarketTickData } from '@/lib/stores/market-store';
 
 type LiveTickerProps = {
   asset: string;
@@ -23,7 +23,6 @@ type LiveTickerProps = {
  * ```
  */
 export function LiveTicker({ asset, tickData, isConnected }: LiveTickerProps) {
-
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -36,7 +35,8 @@ export function LiveTicker({ asset, tickData, isConnected }: LiveTickerProps) {
   const formatVolume = (volume: number) => {
     if (volume >= 1_000_000) {
       return `${(volume / 1_000_000).toFixed(2)}M`;
-    } else if (volume >= 1_000) {
+    }
+    if (volume >= 1_000) {
       return `${(volume / 1_000).toFixed(2)}K`;
     }
     return volume.toFixed(2);
@@ -56,9 +56,7 @@ export function LiveTicker({ asset, tickData, isConnected }: LiveTickerProps) {
       {tickData ? (
         <>
           <div className="mb-4">
-            <div className="text-3xl font-bold text-foreground">
-              {formatPrice(tickData.price)}
-            </div>
+            <div className="text-3xl font-bold text-foreground">{formatPrice(tickData.price)}</div>
           </div>
 
           <div className="grid grid-cols-2 gap-4 text-sm">
@@ -68,9 +66,7 @@ export function LiveTicker({ asset, tickData, isConnected }: LiveTickerProps) {
             </div>
             <div>
               <div className="text-muted-foreground">Updated</div>
-              <div className="font-medium">
-                {new Date(tickData.timestamp).toLocaleTimeString()}
-              </div>
+              <div className="font-medium">{new Date(tickData.timestamp).toLocaleTimeString()}</div>
             </div>
           </div>
         </>

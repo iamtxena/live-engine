@@ -1,10 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
+  CreateStrategyInput,
   Strategy,
   StrategyLog,
-  CreateStrategyInput,
   UpdateStrategyInput,
 } from '@/lib/types/strategy';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 const STRATEGIES_KEY = ['strategies'];
 
@@ -43,7 +43,7 @@ export function useStrategy(id: string | undefined) {
  */
 export function useStrategyLogs(
   strategyId: string | undefined,
-  options?: { limit?: number; level?: string; refetchInterval?: number }
+  options?: { limit?: number; level?: string; refetchInterval?: number },
 ) {
   return useQuery<{ logs: StrategyLog[]; total: number }>({
     queryKey: [...STRATEGIES_KEY, strategyId, 'logs', options?.level],

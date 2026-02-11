@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 
 interface CandleRow {
   timestamp: string;
@@ -26,7 +26,7 @@ let header = '';
 for (const file of files) {
   console.log(`  Reading: ${file}`);
   const content = readFileSync(file, 'utf-8');
-  const lines = content.split('\n').filter(line => line.trim());
+  const lines = content.split('\n').filter((line) => line.trim());
 
   if (!header && lines.length > 0) {
     header = lines[0];
@@ -43,7 +43,7 @@ console.log(`✓ Total rows: ${allRows.length}`);
 console.log('🔄 Sorting by timestamp...');
 allRows.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
 
-const output = header + '\n' + allRows.map(row => row.line).join('\n');
+const output = `${header}\n${allRows.map((row) => row.line).join('\n')}`;
 writeFileSync(outputPath, output);
 
 console.log(`\n✅ Merged file: ${outputPath}`);

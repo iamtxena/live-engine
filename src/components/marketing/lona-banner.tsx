@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import Link from 'next/link';
-import { X, Sparkles, Zap, TrendingUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Sparkles, TrendingUp, X, Zap } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 type LonaBannerProps = {
   variant?: 'compact' | 'full';
@@ -50,7 +50,10 @@ export function LonaBanner({ variant = 'full', dismissible = false }: LonaBanner
         <div className="relative flex items-center justify-between gap-4 p-4 backdrop-blur-sm">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Badge variant="default" className="bg-linear-to-r from-blue-600 to-purple-600 animate-pulse-glow">
+              <Badge
+                variant="default"
+                className="bg-linear-to-r from-blue-600 to-purple-600 animate-pulse-glow"
+              >
                 <Sparkles className="h-3 w-3 mr-1 inline animate-spin-slow" />
                 New
               </Badge>
@@ -58,7 +61,8 @@ export function LonaBanner({ variant = 'full', dismissible = false }: LonaBanner
 
             <p className="text-sm font-medium flex items-center gap-2">
               <Zap className="h-4 w-4 text-yellow-500 animate-bounce-subtle" />
-              Want the strategy for tomorrow&apos;s <span className="font-bold text-primary">100€ live challenge</span>?
+              Want the strategy for tomorrow&apos;s{' '}
+              <span className="font-bold text-primary">100€ live challenge</span>?
               <span className="hidden sm:inline">Generated in 15 seconds with plain English</span>
             </p>
           </div>
@@ -212,12 +216,24 @@ export function LonaBanner({ variant = 'full', dismissible = false }: LonaBanner
 
             <div className="flex flex-wrap items-center gap-4 text-sm">
               {[
-                { icon: <TrendingUp className="h-4 w-4" />, text: 'Backtesting included', delay: '0s' },
-                { icon: <Sparkles className="h-4 w-4" />, text: 'No credit card needed', delay: '0.2s' },
-                { icon: <Zap className="h-4 w-4" />, text: 'AI-generated strategies', delay: '0.4s' },
-              ].map((item, i) => (
+                {
+                  icon: <TrendingUp className="h-4 w-4" />,
+                  text: 'Backtesting included',
+                  delay: '0s',
+                },
+                {
+                  icon: <Sparkles className="h-4 w-4" />,
+                  text: 'No credit card needed',
+                  delay: '0.2s',
+                },
+                {
+                  icon: <Zap className="h-4 w-4" />,
+                  text: 'AI-generated strategies',
+                  delay: '0.4s',
+                },
+              ].map((item) => (
                 <div
-                  key={i}
+                  key={item.text}
                   className="flex items-center gap-2 animate-fade-in-up"
                   style={{ animationDelay: item.delay }}
                 >

@@ -1,21 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUserId } from '@/lib/service-auth';
 import { supabaseAdmin } from '@/lib/supabase';
+import { type NextRequest, NextResponse } from 'next/server';
 
 /**
  * GET /api/strategies/[id]/logs - Get logs for a strategy (paginated)
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await getAuthUserId(request);
 
     const { id } = await params;
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '100');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = Number.parseInt(searchParams.get('limit') || '100');
+    const offset = Number.parseInt(searchParams.get('offset') || '0');
     const level = searchParams.get('level');
 
     // Verify ownership

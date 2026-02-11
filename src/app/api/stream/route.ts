@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const assetsParam = searchParams.get('assets') || 'btcusdt,ethusdt';
-  const assets = assetsParam.split(',').map(a => a.trim().toLowerCase());
+  const assets = assetsParam.split(',').map((a) => a.trim().toLowerCase());
 
   // Create SSE response
   const encoder = new TextEncoder();
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
       const initialData = `data: ${JSON.stringify({
         type: 'connected',
         assets,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       })}\n\n`;
       controller.enqueue(encoder.encode(initialData));
 
@@ -57,7 +57,7 @@ export async function GET(request: Request) {
                 };
               }
               return null;
-            })
+            }),
           );
 
           // Send updates for changed prices
@@ -66,7 +66,7 @@ export async function GET(request: Request) {
               const sseMessage = `data: ${JSON.stringify({
                 type: 'ticker',
                 ...update,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
               })}\n\n`;
               controller.enqueue(encoder.encode(sseMessage));
             }
@@ -86,7 +86,7 @@ export async function GET(request: Request) {
         try {
           const heartbeatMessage = `data: ${JSON.stringify({
             type: 'heartbeat',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           })}\n\n`;
           controller.enqueue(encoder.encode(heartbeatMessage));
         } catch (error) {
@@ -108,7 +108,7 @@ export async function GET(request: Request) {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache, no-transform',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
       'X-Accel-Buffering': 'no', // Disable buffering for Nginx
     },
   });

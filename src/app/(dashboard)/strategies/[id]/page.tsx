@@ -1,14 +1,11 @@
 'use client';
 
-import { useState, use } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { CodeEditor } from '@/components/editors/code-editor';
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -16,15 +13,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CodeEditor } from '@/components/editors/code-editor';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
+  useDeleteStrategy,
+  useStartStrategy,
+  useStopStrategy,
   useStrategy,
   useStrategyLogs,
   useUpdateStrategy,
-  useStartStrategy,
-  useStopStrategy,
-  useDeleteStrategy,
 } from '@/lib/hooks/use-strategies';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { use, useState } from 'react';
 
 const STATUS_COLORS: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
   draft: 'secondary',
@@ -126,11 +126,7 @@ export default function StrategyDetailPage({
   };
 
   if (isLoading) {
-    return (
-      <div className="py-12 text-center text-muted-foreground">
-        Loading strategy...
-      </div>
-    );
+    return <div className="py-12 text-center text-muted-foreground">Loading strategy...</div>;
   }
 
   if (error || !data?.strategy) {
@@ -162,11 +158,7 @@ export default function StrategyDetailPage({
         </div>
         <div className="flex items-center gap-2">
           {strategy.status === 'running' ? (
-            <Button
-              variant="destructive"
-              onClick={handleStop}
-              disabled={stopMutation.isPending}
-            >
+            <Button variant="destructive" onClick={handleStop} disabled={stopMutation.isPending}>
               {stopMutation.isPending ? 'Stopping...' : 'Stop'}
             </Button>
           ) : (
@@ -234,9 +226,7 @@ export default function StrategyDetailPage({
               <Button onClick={handleSave} disabled={updateMutation.isPending}>
                 {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
               </Button>
-              {updateMutation.isSuccess && (
-                <Badge variant="default">Changes saved!</Badge>
-              )}
+              {updateMutation.isSuccess && <Badge variant="default">Changes saved!</Badge>}
             </div>
           )}
         </TabsContent>
@@ -335,8 +325,8 @@ export default function StrategyDetailPage({
             <Card className="p-6">
               <h2 className="mb-4 text-lg font-semibold">Dependencies</h2>
               <div className="flex flex-wrap gap-2">
-                {strategy.dependencies.map((dep: string, i: number) => (
-                  <Badge key={i} variant="secondary">
+                {strategy.dependencies.map((dep: string) => (
+                  <Badge key={dep} variant="secondary">
                     {dep}
                   </Badge>
                 ))}
@@ -350,10 +340,7 @@ export default function StrategyDetailPage({
             <Card className="p-6">
               <div className="flex flex-col space-y-1">
                 <span className="text-sm font-medium text-muted-foreground">Status</span>
-                <Badge
-                  variant={STATUS_COLORS[strategy.status]}
-                  className="w-fit text-lg"
-                >
+                <Badge variant={STATUS_COLORS[strategy.status]} className="w-fit text-lg">
                   {strategy.status.toUpperCase()}
                 </Badge>
               </div>
@@ -363,9 +350,7 @@ export default function StrategyDetailPage({
               <div className="flex flex-col space-y-1">
                 <span className="text-sm font-medium text-muted-foreground">Last Run</span>
                 <span className="text-lg font-semibold">
-                  {strategy.last_run_at
-                    ? new Date(strategy.last_run_at).toLocaleString()
-                    : 'Never'}
+                  {strategy.last_run_at ? new Date(strategy.last_run_at).toLocaleString() : 'Never'}
                 </span>
               </div>
             </Card>
@@ -414,11 +399,7 @@ export default function StrategyDetailPage({
 
           <div className="flex items-center gap-4">
             {strategy.status === 'running' ? (
-              <Button
-                variant="destructive"
-                onClick={handleStop}
-                disabled={stopMutation.isPending}
-              >
+              <Button variant="destructive" onClick={handleStop} disabled={stopMutation.isPending}>
                 {stopMutation.isPending ? 'Stopping...' : 'Stop Strategy'}
               </Button>
             ) : (

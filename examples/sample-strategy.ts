@@ -1,4 +1,4 @@
-import * as ccxt from 'ccxt';
+import type * as ccxt from 'ccxt';
 import { SMA } from 'technicalindicators';
 
 interface StrategyParams {
@@ -11,20 +11,25 @@ class SmaCrossStrategy {
   private params: StrategyParams = {
     sma_short: 10,
     sma_long: 30,
-    size: 0.1
+    size: 0.1,
   };
 
   constructor(
     private exchange: ccxt.Exchange,
     private symbol: string,
-    private timeframe: string = '1h'
+    private timeframe = '1h',
   ) {}
 
   async checkAndTrade(): Promise<void> {
     try {
       // Fetch enough bars for indicators + extra for crossover detection
       const limit = this.params.sma_long + 10;
-      const bars: number[][] = await this.exchange.fetchOHLCV(this.symbol, this.timeframe, undefined, limit);
+      const bars: number[][] = await this.exchange.fetchOHLCV(
+        this.symbol,
+        this.timeframe,
+        undefined,
+        limit,
+      );
 
       if (bars.length < this.params.sma_long + 1) {
         throw new Error('Insufficient historical data for indicators');
@@ -53,8 +58,12 @@ class SmaCrossStrategy {
       }
 
       // Fetch positions (assumes futures/derivatives trading)
-      const positions: any[] = await this.exchange.fetchPositions([this.symbol]);
-      const position = positions.find((p: any) => p.symbol === this.symbol) || { contracts: 0 };
+      const positions: { symbol: string; contracts: number }[] = await this.exchange.fetchPositions(
+        [this.symbol],
+      );
+      const position = positions.find((p: { symbol: string }) => p.symbol === this.symbol) || {
+        contracts: 0,
+      };
       const hasPosition = Math.abs(position.contracts || 0) > 0;
 
       // Strategy is long-only with fixed size
