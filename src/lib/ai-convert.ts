@@ -40,23 +40,41 @@ Your task is to convert Python trading code to TypeScript that works with:
 - Modern async/await patterns
 - Clean, production-ready code
 
+CRITICAL - CODE FORMAT REQUIREMENTS:
+The generated code runs inside a Function constructor (new Function()), NOT as an ES module.
+You MUST follow these rules:
+- Do NOT use import or export statements (they cause "Cannot use import statement outside a module")
+- Do NOT use "require()" calls
+- Define all helper functions, interfaces, and types inline
+- Implement indicator calculations (SMA, RSI, EMA, MACD, Bollinger Bands, etc.) as plain functions using Math and Array methods
+- The main entry point MUST be a function named "tradingStrategy" that takes a single "context" parameter and returns a result object
+
+The context parameter has this shape:
+{
+  candles: Array<{ timestamp: string; open: number; high: number; low: number; close: number; volume: number }>;
+  currentPrice: number;
+  position: { asset: string; quantity: number; entry_price: number; current_price: number; pnl: number; pnl_percentage: number } | null;
+  parameters: Record<string, unknown>;
+}
+
+The function must return: { signal: 'buy' | 'sell' | 'hold'; reason?: string; amount?: number; indicators?: Record<string, number> }
+
 IMPORTANT - BACKTRADER CONVERSION:
 The Python code often uses the backtrader library. When converting backtrader code:
-- Convert bt.Strategy classes to TypeScript strategy interfaces
-- Convert bt.indicators (SMA, RSI, MACD, etc.) to equivalent calculations or technicalindicators npm package
-- Convert self.buy()/self.sell() to ccxt order methods
+- Convert bt.Strategy classes to a plain tradingStrategy function
+- Convert bt.indicators (SMA, RSI, MACD, etc.) to inline helper functions
+- Convert self.buy()/self.sell() to return { signal: 'buy' } / { signal: 'sell' }
 - Convert self.data.close[0], self.data.open[-1] etc. to array-based candle access
-- Convert cerebro.run() flow to async execution loop
-- Map bt.feeds.PandasData to our market data format (Timestamp,Symbol,Open,High,Low,Close,Volume)
+- Map bt.feeds.PandasData to our candle format
 
 Backtrader to TypeScript mappings:
-- bt.Strategy → class implementing IStrategy interface
+- bt.Strategy → function tradingStrategy(context)
 - self.data.close[0] → candles[candles.length - 1].close
 - self.data.close[-1] → candles[candles.length - 2].close
-- bt.indicators.SMA → technicalindicators SMA or manual calculation
-- self.buy(size=X) → broker.createOrder(symbol, 'market', 'buy', X)
-- self.sell(size=X) → broker.createOrder(symbol, 'market', 'sell', X)
-- self.position.size → position tracking via broker.fetchPositions()
+- bt.indicators.SMA → inline calculateSMA() function
+- self.buy(size=X) → return { signal: 'buy', amount: X, reason: '...' }
+- self.sell(size=X) → return { signal: 'sell', amount: X, reason: '...' }
+- self.position.size → context.position?.quantity ?? 0
 
 Additional requirements:
 - Preserve the original trading logic exactly
@@ -64,7 +82,8 @@ Additional requirements:
 - Convert pandas operations to native JavaScript/TypeScript
 - Convert numpy to native math operations
 - Include comprehensive error handling
-- Add type definitions for all functions and variables`;
+- Add type definitions for all functions and variables
+- ALL code must be self-contained with zero external dependencies`;
 
   const userPrompt = `Convert this Python trading code to TypeScript:
 
@@ -76,10 +95,11 @@ ${context ? `\n**Strategy Context:**\n${context}` : ''}
 
 Provide a complete TypeScript implementation that:
 1. Maintains the exact same trading logic
-2. Uses ccxt for broker operations
-3. Includes proper TypeScript types
-4. Handles errors gracefully
-5. Works in a Next.js server environment`;
+2. Is completely self-contained (NO import/export/require statements)
+3. Defines a "tradingStrategy(context)" function as the entry point
+4. Implements all indicators as inline helper functions
+5. Returns { signal: 'buy' | 'sell' | 'hold', reason: string, indicators?: Record<string, number> }
+6. Handles errors gracefully`;
 
   try {
     const { object: result } = await wrappedGenerateObject({

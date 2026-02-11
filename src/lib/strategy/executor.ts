@@ -8,6 +8,35 @@ import type {
 } from '@/lib/types/strategy';
 
 /**
+ * Strip import/export statements from generated code so it can run inside new Function().
+ * The Function constructor has no module context, so ES module syntax causes:
+ * "Cannot use import statement outside a module"
+ */
+function sanitizeForExecution(code: string): string {
+  return code
+    .split('\n')
+    .map((line) => {
+      const trimmed = line.trimStart();
+      // Remove import statements: import ... from '...'; import '...';
+      if (trimmed.startsWith('import ')) return `// [stripped] ${line}`;
+      // Convert "export function" / "export async function" / "export class" to plain declarations
+      if (trimmed.startsWith('export function '))
+        return line.replace('export function ', 'function ');
+      if (trimmed.startsWith('export async function '))
+        return line.replace('export async function ', 'async function ');
+      if (trimmed.startsWith('export class ')) return line.replace('export class ', 'class ');
+      if (trimmed.startsWith('export const ')) return line.replace('export const ', 'const ');
+      if (trimmed.startsWith('export let ')) return line.replace('export let ', 'let ');
+      // Remove "export default" prefix
+      if (trimmed.startsWith('export default ')) return line.replace('export default ', '');
+      // Remove bare "export { ... }" re-exports
+      if (/^export\s*\{/.test(trimmed)) return `// [stripped] ${line}`;
+      return line;
+    })
+    .join('\n');
+}
+
+/**
  * Safely execute TypeScript strategy code
  * Uses Function constructor for sandboxed evaluation
  */
@@ -16,10 +45,12 @@ export async function executeStrategy(
   context: StrategyContext,
 ): Promise<StrategyResult> {
   try {
+    // Strip import/export statements that can't run in Function constructor
+    const cleanCode = sanitizeForExecution(typescriptCode);
+
     // Create a sandboxed function with the strategy code
-    // The code should export a function called 'evaluate' that takes context and returns StrategyResult
     const wrappedCode = `
-      ${typescriptCode}
+      ${cleanCode}
 
       // Call the main strategy function
       if (typeof tradingStrategy === 'function') {
