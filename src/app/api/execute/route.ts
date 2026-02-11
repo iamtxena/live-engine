@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { executePythonCode, validatePythonSyntax } from '@/lib/python-executor';
+import { type NextRequest, NextResponse } from 'next/server';
 
 /**
  * API Route: /api/execute
@@ -15,10 +15,7 @@ export async function POST(request: NextRequest) {
     const { code, inputs } = await request.json();
 
     if (!code) {
-      return NextResponse.json(
-        { error: 'Missing required parameter: code' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required parameter: code' }, { status: 400 });
     }
 
     // Validate Python syntax
@@ -30,7 +27,7 @@ export async function POST(request: NextRequest) {
           error: 'Invalid Python code',
           validationErrors: validation.errors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -56,7 +53,7 @@ export async function POST(request: NextRequest) {
         error: 'Failed to execute Python code',
         message: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -68,8 +65,7 @@ export async function GET() {
   return NextResponse.json({
     endpoint: '/api/execute',
     method: 'POST',
-    description:
-      'Execute Python trading code (currently recommends conversion to TypeScript)',
+    description: 'Execute Python trading code (currently recommends conversion to TypeScript)',
     parameters: {
       code: {
         type: 'string',

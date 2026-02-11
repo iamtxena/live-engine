@@ -13,7 +13,7 @@
 
 export interface PythonExecutionResult {
   success: boolean;
-  output?: any;
+  output?: unknown;
   error?: string;
   executionTime?: number;
   recommendation: string;
@@ -30,11 +30,9 @@ export interface PythonExecutionResult {
  */
 export async function executePythonCode(
   code: string,
-  inputs?: Record<string, any>
+  inputs?: Record<string, unknown>,
 ): Promise<PythonExecutionResult> {
-  console.warn(
-    'Python executor called - this is a placeholder implementation'
-  );
+  console.warn('Python executor called - this is a placeholder implementation');
 
   // For security and performance, we recommend converting Python → TypeScript
   // using the /api/convert endpoint (Grok AI) instead of executing Python directly
@@ -62,8 +60,7 @@ export function validatePythonSyntax(code: string): {
   }
 
   // Check for common Python keywords
-  const hasValidKeywords =
-    /def |class |import |from |if |for |while /.test(code);
+  const hasValidKeywords = /def |class |import |from |if |for |while /.test(code);
 
   if (!hasValidKeywords && code.length > 10) {
     errors.push('Code does not appear to be valid Python');

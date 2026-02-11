@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { OrderForm } from '@/components/trading/order-form';
+import { PositionsCard } from '@/components/trading/positions-card';
+import { TradesTable } from '@/components/trading/trades-table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -12,10 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { OrderForm } from '@/components/trading/order-form';
-import { PositionsCard } from '@/components/trading/positions-card';
-import { TradesTable } from '@/components/trading/trades-table';
 import { useMarketStore } from '@/lib/stores/market-store';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 
 const ASSETS = ['btcusdt', 'ethusdt', 'bnbusdt', 'solusdt'];
 
@@ -99,7 +99,7 @@ export default function PaperTradingPage() {
   const handleCreatePortfolio = () => {
     const balance = prompt('Enter initial balance (default: $10,000):', '10000');
     if (balance) {
-      createPortfolioMutation.mutate(parseFloat(balance));
+      createPortfolioMutation.mutate(Number.parseFloat(balance));
     }
   };
 
@@ -117,9 +117,7 @@ export default function PaperTradingPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Paper Trading</h1>
-          <p className="text-muted-foreground">
-            Test strategies risk-free with simulated accounts
-          </p>
+          <p className="text-muted-foreground">Test strategies risk-free with simulated accounts</p>
         </div>
 
         <Card className="p-12 text-center">
@@ -127,10 +125,7 @@ export default function PaperTradingPage() {
           <p className="text-muted-foreground mb-6">
             Create a paper trading portfolio to start simulated trading
           </p>
-          <Button
-            onClick={handleCreatePortfolio}
-            disabled={createPortfolioMutation.isPending}
-          >
+          <Button onClick={handleCreatePortfolio} disabled={createPortfolioMutation.isPending}>
             {createPortfolioMutation.isPending ? 'Creating...' : 'Create Portfolio'}
           </Button>
         </Card>
@@ -143,20 +138,13 @@ export default function PaperTradingPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Paper Trading</h1>
-          <p className="text-muted-foreground">
-            Test strategies risk-free with simulated accounts
-          </p>
+          <p className="text-muted-foreground">Test strategies risk-free with simulated accounts</p>
         </div>
 
         <Card className="p-12 text-center">
           <h2 className="text-xl font-semibold mb-4">Get Started</h2>
-          <p className="text-muted-foreground mb-6">
-            Create your first paper trading portfolio
-          </p>
-          <Button
-            onClick={handleCreatePortfolio}
-            disabled={createPortfolioMutation.isPending}
-          >
+          <p className="text-muted-foreground mb-6">Create your first paper trading portfolio</p>
+          <Button onClick={handleCreatePortfolio} disabled={createPortfolioMutation.isPending}>
             {createPortfolioMutation.isPending ? 'Creating...' : 'Create Portfolio'}
           </Button>
         </Card>
@@ -177,9 +165,7 @@ export default function PaperTradingPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Paper Trading</h1>
-          <p className="text-muted-foreground">
-            Test strategies risk-free with simulated accounts
-          </p>
+          <p className="text-muted-foreground">Test strategies risk-free with simulated accounts</p>
         </div>
         <Button onClick={handleCreatePortfolio} variant="outline">
           New Portfolio
@@ -189,15 +175,12 @@ export default function PaperTradingPage() {
       {portfolios.length > 1 && (
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Portfolio:</span>
-          <Select
-            value={selectedPortfolio || ''}
-            onValueChange={setSelectedPortfolio}
-          >
+          <Select value={selectedPortfolio || ''} onValueChange={setSelectedPortfolio}>
             <SelectTrigger className="w-[200px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {portfolios.map((p: any) => (
+              {portfolios.map((p: { id: string; balance: number }) => (
                 <SelectItem key={p.id} value={p.id}>
                   {formatCurrency(p.balance)}
                 </SelectItem>
@@ -212,12 +195,8 @@ export default function PaperTradingPage() {
           <div className="grid gap-4 md:grid-cols-3">
             <Card className="p-6">
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-muted-foreground">
-                  Total Value
-                </span>
-                <span className="text-2xl font-bold">
-                  {formatCurrency(portfolio.totalValue)}
-                </span>
+                <span className="text-sm font-medium text-muted-foreground">Total Value</span>
+                <span className="text-2xl font-bold">{formatCurrency(portfolio.totalValue)}</span>
                 <Badge variant="outline" className="w-fit">
                   Cash: {formatCurrency(portfolio.balance)}
                 </Badge>
@@ -226,9 +205,7 @@ export default function PaperTradingPage() {
 
             <Card className="p-6">
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-muted-foreground">
-                  Total P&L
-                </span>
+                <span className="text-sm font-medium text-muted-foreground">Total P&L</span>
                 <span
                   className={`text-2xl font-bold ${
                     portfolio.pnl >= 0 ? 'text-green-500' : 'text-red-500'
@@ -237,10 +214,7 @@ export default function PaperTradingPage() {
                   {portfolio.pnl >= 0 ? '+' : ''}
                   {formatCurrency(portfolio.pnl)}
                 </span>
-                <Badge
-                  variant={portfolio.pnl >= 0 ? 'default' : 'destructive'}
-                  className="w-fit"
-                >
+                <Badge variant={portfolio.pnl >= 0 ? 'default' : 'destructive'} className="w-fit">
                   {portfolio.pnl >= 0 ? '+' : ''}
                   {portfolio.pnlPercent.toFixed(2)}%
                 </Badge>
@@ -249,9 +223,7 @@ export default function PaperTradingPage() {
 
             <Card className="p-6">
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-muted-foreground">
-                  Open Positions
-                </span>
+                <span className="text-sm font-medium text-muted-foreground">Open Positions</span>
                 <span className="text-2xl font-bold">{positions.length}</span>
                 <Badge variant="outline" className="w-fit">
                   {positions.length === 0 ? 'No active trades' : `${trades.length} total trades`}
@@ -272,29 +244,38 @@ export default function PaperTradingPage() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {trades.slice(0, 10).map((trade: any) => (
-                      <div
-                        key={trade.id}
-                        className="flex items-center justify-between p-3 rounded-lg border"
-                      >
-                        <div className="flex items-center gap-3">
-                          <Badge variant={trade.side === 'buy' ? 'default' : 'destructive'}>
-                            {trade.side.toUpperCase()}
-                          </Badge>
-                          <span className="font-medium uppercase">
-                            {trade.asset.replace('usdt', '/USDT')}
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-mono">
-                            {trade.amount} @ {formatCurrency(trade.price)}
+                    {trades.slice(0, 10).map(
+                      (trade: {
+                        id: string;
+                        side: string;
+                        asset: string;
+                        amount: number;
+                        price: number;
+                        created_at: string;
+                      }) => (
+                        <div
+                          key={trade.id}
+                          className="flex items-center justify-between p-3 rounded-lg border"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Badge variant={trade.side === 'buy' ? 'default' : 'destructive'}>
+                              {trade.side.toUpperCase()}
+                            </Badge>
+                            <span className="font-medium uppercase">
+                              {trade.asset.replace('usdt', '/USDT')}
+                            </span>
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            {new Date(trade.created_at).toLocaleString()}
+                          <div className="text-right">
+                            <div className="font-mono">
+                              {trade.amount} @ {formatCurrency(trade.price)}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(trade.created_at).toLocaleString()}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
                 )}
               </Card>

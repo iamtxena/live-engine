@@ -1,9 +1,9 @@
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Logo } from '@/components/logo';
 import { LonaBanner } from '@/components/marketing/lona-banner';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import Link from 'next/link';
 
 export default function LandingPage() {
   return (
@@ -59,6 +59,7 @@ export default function LandingPage() {
             href="https://lona.agency"
             target="_blank"
             className="font-medium text-primary underline-offset-4 hover:underline"
+            rel="noreferrer"
           >
             Lona.agency
           </a>
@@ -94,8 +95,8 @@ export default function LandingPage() {
           <Card className="p-6">
             <h3 className="mb-2 text-xl font-semibold">Real-Time Data</h3>
             <p className="text-muted-foreground">
-              WebSocket feeds with tick + 1-min historical storage in Supabase. Lightning-fast
-              Redis caching.
+              WebSocket feeds with tick + 1-min historical storage in Supabase. Lightning-fast Redis
+              caching.
             </p>
           </Card>
           <Card className="p-6">
@@ -162,11 +163,7 @@ export default function LandingPage() {
             >
               GitHub
             </Link>
-            <Link
-              href="https://lona.agency"
-              target="_blank"
-              className="hover:text-primary"
-            >
+            <Link href="https://lona.agency" target="_blank" className="hover:text-primary">
               Lona
             </Link>
           </div>

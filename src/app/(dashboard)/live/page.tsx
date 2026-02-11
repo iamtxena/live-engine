@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { OrderForm } from '@/components/trading/order-form';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -14,19 +13,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { OrderForm } from '@/components/trading/order-form';
 import { useMarketStore } from '@/lib/stores/market-store';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 
 const ASSETS = ['btcusdt', 'ethusdt', 'bnbusdt', 'solusdt'];
 
 export default function LiveTradingPage() {
-  const [selectedBroker, setSelectedBroker] = useState<'binance' | 'bybit' | 'kraken' | 'coinbase'>('bybit');
+  const [selectedBroker, setSelectedBroker] = useState<'binance' | 'bybit' | 'kraken' | 'coinbase'>(
+    'bybit',
+  );
   const [selectedAsset, setSelectedAsset] = useState('BTC/USDT');
   const [useTestnet, setUseTestnet] = useState(true);
   const queryClient = useQueryClient();
   const { tickers } = useMarketStore();
 
-  const { data: brokerData, isLoading, error } = useQuery({
+  const {
+    data: brokerData,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['broker', selectedBroker, selectedAsset, useTestnet],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -93,8 +99,8 @@ export default function LiveTradingPage() {
         .reduce((sum, [_, amount]) => sum + (amount as number), 0)
     : 0;
 
-  const currentPrice = tickers.get(selectedAsset.toLowerCase().replace('/', ''))?.price ||
-    brokerData?.ticker?.price;
+  const currentPrice =
+    tickers.get(selectedAsset.toLowerCase().replace('/', ''))?.price || brokerData?.ticker?.price;
 
   const isConnected = !error && brokerData;
 
@@ -128,7 +134,10 @@ export default function LiveTradingPage() {
         <div className="grid gap-4 md:grid-cols-3">
           <div className="space-y-2">
             <Label htmlFor="broker">Select Broker</Label>
-            <Select value={selectedBroker} onValueChange={(value: any) => setSelectedBroker(value)}>
+            <Select
+              value={selectedBroker}
+              onValueChange={(value: string) => setSelectedBroker(value as typeof selectedBroker)}
+            >
               <SelectTrigger id="broker">
                 <SelectValue placeholder="Select broker" />
               </SelectTrigger>
@@ -143,7 +152,10 @@ export default function LiveTradingPage() {
 
           <div className="space-y-2">
             <Label htmlFor="environment">Environment</Label>
-            <Select value={useTestnet ? 'testnet' : 'live'} onValueChange={(val) => setUseTestnet(val === 'testnet')}>
+            <Select
+              value={useTestnet ? 'testnet' : 'live'}
+              onValueChange={(val) => setUseTestnet(val === 'testnet')}
+            >
               <SelectTrigger id="environment">
                 <SelectValue />
               </SelectTrigger>
@@ -183,9 +195,7 @@ export default function LiveTradingPage() {
             <span className="text-sm font-medium text-muted-foreground">
               Available Balance (USDT)
             </span>
-            <span className="text-2xl font-bold">
-              {formatCurrency(totalBalance)}
-            </span>
+            <span className="text-2xl font-bold">{formatCurrency(totalBalance)}</span>
             <Badge variant="outline" className="w-fit">
               {selectedBroker.toUpperCase()} {useTestnet ? 'Testnet' : 'Live'}
             </Badge>
@@ -194,9 +204,7 @@ export default function LiveTradingPage() {
 
         <Card className="p-6">
           <div className="flex flex-col space-y-1">
-            <span className="text-sm font-medium text-muted-foreground">
-              Current Price
-            </span>
+            <span className="text-sm font-medium text-muted-foreground">Current Price</span>
             <span className="text-2xl font-bold">
               {currentPrice ? formatCurrency(currentPrice) : '$--,---'}
             </span>
@@ -208,14 +216,12 @@ export default function LiveTradingPage() {
 
         <Card className="p-6">
           <div className="flex flex-col space-y-1">
-            <span className="text-sm font-medium text-muted-foreground">
-              Open Orders
-            </span>
-            <span className="text-2xl font-bold">
-              {brokerData?.openOrders?.length || 0}
-            </span>
+            <span className="text-sm font-medium text-muted-foreground">Open Orders</span>
+            <span className="text-2xl font-bold">{brokerData?.openOrders?.length || 0}</span>
             <Badge variant="outline" className="w-fit">
-              {brokerData?.openOrders?.length ? `${brokerData.openOrders.length} active` : 'No orders'}
+              {brokerData?.openOrders?.length
+                ? `${brokerData.openOrders.length} active`
+                : 'No orders'}
             </Badge>
           </div>
         </Card>
@@ -226,7 +232,10 @@ export default function LiveTradingPage() {
           <h2 className="mb-4 text-xl font-semibold">Account Balances</h2>
           <div className="grid gap-3 md:grid-cols-4">
             {Object.entries(brokerData.balance).map(([currency, amount]) => (
-              <div key={currency} className="flex items-center justify-between p-3 rounded-lg border">
+              <div
+                key={currency}
+                className="flex items-center justify-between p-3 rounded-lg border"
+              >
                 <span className="text-sm font-medium">{currency}</span>
                 <span className="font-mono text-sm">{(amount as number).toFixed(8)}</span>
               </div>
@@ -241,27 +250,37 @@ export default function LiveTradingPage() {
             <Card className="p-4">
               <h3 className="text-lg font-semibold mb-4">Open Orders</h3>
               <div className="space-y-2">
-                {brokerData.openOrders.map((order: any) => (
-                  <div
-                    key={order.id}
-                    className="flex items-center justify-between p-3 rounded-lg border"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Badge variant={order.side === 'buy' ? 'default' : 'destructive'}>
-                        {order.side.toUpperCase()}
-                      </Badge>
-                      <span className="font-medium">{order.symbol}</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-mono text-sm">
-                        {order.amount} @ {formatCurrency(order.price)}
+                {brokerData.openOrders.map(
+                  (order: {
+                    id: string;
+                    side: string;
+                    symbol: string;
+                    amount: number;
+                    price: number;
+                    type: string;
+                    status: string;
+                  }) => (
+                    <div
+                      key={order.id}
+                      className="flex items-center justify-between p-3 rounded-lg border"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Badge variant={order.side === 'buy' ? 'default' : 'destructive'}>
+                          {order.side.toUpperCase()}
+                        </Badge>
+                        <span className="font-medium">{order.symbol}</span>
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {order.type} - {order.status}
+                      <div className="text-right">
+                        <div className="font-mono text-sm">
+                          {order.amount} @ {formatCurrency(order.price)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {order.type} - {order.status}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ),
+                )}
               </div>
             </Card>
           )}
@@ -269,9 +288,7 @@ export default function LiveTradingPage() {
           {(!brokerData?.openOrders || brokerData.openOrders.length === 0) && (
             <Card className="p-12 text-center">
               <p className="text-muted-foreground">No open orders</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Place an order to see it here
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Place an order to see it here</p>
             </Card>
           )}
         </div>

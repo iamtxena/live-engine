@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { fetchHistoricalCandles, type Asset, type Interval } from '@/lib/binance';
+import { type Asset, type Interval, fetchHistoricalCandles } from '@/lib/binance';
 import { supabaseAdmin } from '@/lib/supabase';
+import { type NextRequest, NextResponse } from 'next/server';
 
 /**
  * API Route: /api/historical
@@ -14,10 +14,7 @@ export async function POST(request: NextRequest) {
     const { symbol, interval, startTime, endTime, limit } = await request.json();
 
     if (!symbol) {
-      return NextResponse.json(
-        { error: 'Missing required parameter: symbol' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required parameter: symbol' }, { status: 400 });
     }
 
     // Convert ISO strings to Unix ms if provided
@@ -42,29 +39,33 @@ export async function POST(request: NextRequest) {
     });
 
     // Store in Supabase
-    const insertData = candles.map((candle: any) => ({
-      asset: symbol.toLowerCase(),
-      timestamp: candle.timestamp,
-      open: candle.open,
-      high: candle.high,
-      low: candle.low,
-      close: candle.close,
-      volume: candle.volume,
-      source: 'binance',
-    }));
+    const insertData = candles.map(
+      (candle: {
+        timestamp: string;
+        open: number;
+        high: number;
+        low: number;
+        close: number;
+        volume: number;
+      }) => ({
+        asset: symbol.toLowerCase(),
+        timestamp: candle.timestamp,
+        open: candle.open,
+        high: candle.high,
+        low: candle.low,
+        close: candle.close,
+        volume: candle.volume,
+        source: 'binance',
+      }),
+    );
 
-    const { error } = await supabaseAdmin
-      .from('market_data')
-      .upsert(insertData, {
-        onConflict: 'asset,timestamp',
-      });
+    const { error } = await supabaseAdmin.from('market_data').upsert(insertData, {
+      onConflict: 'asset,timestamp',
+    });
 
     if (error) {
       console.error('Error storing historical data:', error);
-      return NextResponse.json(
-        { error: 'Failed to store historical data' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to store historical data' }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -76,10 +77,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Historical data fetch error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch historical data' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch historical data' }, { status: 500 });
   }
 }
 
@@ -95,10 +93,7 @@ export async function GET(request: NextRequest) {
     const limit = searchParams.get('limit') || '100';
 
     if (!symbol) {
-      return NextResponse.json(
-        { error: 'Missing required parameter: symbol' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required parameter: symbol' }, { status: 400 });
     }
 
     let query = supabaseAdmin
@@ -106,7 +101,7 @@ export async function GET(request: NextRequest) {
       .select('*')
       .eq('asset', symbol.toLowerCase())
       .order('timestamp', { ascending: false })
-      .limit(parseInt(limit));
+      .limit(Number.parseInt(limit));
 
     if (start) {
       query = query.gte('timestamp', start);
@@ -120,10 +115,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error querying historical data:', error);
-      return NextResponse.json(
-        { error: 'Failed to query historical data' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to query historical data' }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -134,9 +126,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Historical data query error:', error);
-    return NextResponse.json(
-      { error: 'Failed to query historical data' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to query historical data' }, { status: 500 });
   }
 }

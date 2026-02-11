@@ -11,10 +11,10 @@
  *   AI_MODEL_EXPLANATION - Override explanation model
  */
 
-import { xai } from '@ai-sdk/xai';
-import { openai } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { google } from '@ai-sdk/google';
+import { openai } from '@ai-sdk/openai';
+import { xai } from '@ai-sdk/xai';
 import type { LanguageModel } from 'ai';
 
 // Supported providers

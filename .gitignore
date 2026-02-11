@@ -49,5 +49,8 @@ instructions.md
 
 # Historical data
 /data
+*.csv
+*_report*.txt
+*_trades*.txt
 
 .cursor/mcp.json

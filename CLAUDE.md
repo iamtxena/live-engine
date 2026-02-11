@@ -23,7 +23,9 @@ Live Engine is a universal real-time market data engine and paper/live trading b
 pnpm dev              # Run dev server with Turbopack
 pnpm build            # Production build
 pnpm start            # Run production server
-pnpm lint             # ESLint check
+pnpm lint             # Biome check (linting + formatting)
+pnpm lint:fix         # Biome auto-fix
+pnpm format           # Biome format
 
 # CLI (stub implementation)
 pnpm cli              # Show CLI help

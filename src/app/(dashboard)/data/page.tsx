@@ -1,12 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -22,6 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 
 const ASSETS = [
   { value: 'btcusdt', label: 'BTC/USDT' },
@@ -163,23 +163,16 @@ export default function DataPage() {
         </div>
 
         <div className="mt-6 flex items-center gap-4">
-          <Button
-            onClick={() => downloadMutation.mutate()}
-            disabled={downloadMutation.isPending}
-          >
+          <Button onClick={() => downloadMutation.mutate()} disabled={downloadMutation.isPending}>
             {downloadMutation.isPending ? 'Downloading...' : 'Download Data'}
           </Button>
 
           {downloadMutation.isSuccess && (
-            <Badge variant="default">
-              Downloaded {downloadMutation.data?.count} candles
-            </Badge>
+            <Badge variant="default">Downloaded {downloadMutation.data?.count} candles</Badge>
           )}
 
           {downloadMutation.isError && (
-            <Badge variant="destructive">
-              Error: {downloadMutation.error?.message}
-            </Badge>
+            <Badge variant="destructive">Error: {downloadMutation.error?.message}</Badge>
           )}
         </div>
       </Card>
@@ -206,28 +199,37 @@ export default function DataPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {previewData.data.map((candle: any, idx: number) => (
-                  <TableRow key={idx}>
-                    <TableCell className="font-mono text-xs">
-                      {formatDate(candle.timestamp)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {parseFloat(candle.open).toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {parseFloat(candle.high).toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {parseFloat(candle.low).toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {parseFloat(candle.close).toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {parseFloat(candle.volume).toFixed(2)}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {previewData.data.map(
+                  (candle: {
+                    timestamp: string;
+                    open: string;
+                    high: string;
+                    low: string;
+                    close: string;
+                    volume: string;
+                  }) => (
+                    <TableRow key={candle.timestamp}>
+                      <TableCell className="font-mono text-xs">
+                        {formatDate(candle.timestamp)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {Number.parseFloat(candle.open).toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {Number.parseFloat(candle.high).toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {Number.parseFloat(candle.low).toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {Number.parseFloat(candle.close).toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {Number.parseFloat(candle.volume).toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                  ),
+                )}
               </TableBody>
             </Table>
           </div>

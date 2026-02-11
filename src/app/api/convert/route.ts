@@ -1,6 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { convertPythonToTypescript, validateTypescriptCode, explainStrategy } from '@/lib/ai-convert';
+import {
+  convertPythonToTypescript,
+  explainStrategy,
+  validateTypescriptCode,
+} from '@/lib/ai-convert';
 import { flushTraces } from '@/lib/langsmith';
+import { type NextRequest, NextResponse } from 'next/server';
 
 /**
  * API Route: /api/convert
@@ -16,7 +20,7 @@ export async function POST(request: NextRequest) {
     if (!pythonCode) {
       return NextResponse.json(
         { error: 'Missing required parameter: pythonCode' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -65,7 +69,7 @@ export async function POST(request: NextRequest) {
         error: 'Failed to convert Python code',
         message: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

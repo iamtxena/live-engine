@@ -14,16 +14,27 @@
  */
 
 import 'dotenv/config';
+import { execSync } from 'node:child_process';
+import {
+  createWriteStream,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  writeFileSync,
+} from 'node:fs';
+import https from 'node:https';
+import { dirname, join } from 'node:path';
 import { Command } from 'commander';
-import { fetchHistoricalCandles, type Asset } from '../lib/binance';
-import { supabaseAdmin } from '../lib/supabase';
-import { convertPythonToTypescript, validateTypescriptCode, explainStrategy } from '../lib/ai-convert';
-import { flushTraces } from '../lib/langsmith';
 import { getProvider } from '../lib/ai-config';
-import { writeFileSync, mkdirSync, readFileSync, readdirSync, existsSync, createWriteStream } from 'fs';
-import { join, dirname } from 'path';
-import { execSync } from 'child_process';
-import https from 'https';
+import {
+  convertPythonToTypescript,
+  explainStrategy,
+  validateTypescriptCode,
+} from '../lib/ai-convert';
+import { type Asset, fetchHistoricalCandles } from '../lib/binance';
+import { flushTraces } from '../lib/langsmith';
+import { supabaseAdmin } from '../lib/supabase';
 
 // Helper: Convert Binance timestamp to ISO
 function convertUnixToISO(unix: number): string {
@@ -35,26 +46,31 @@ function convertUnixToISO(unix: number): string {
 async function downloadFile(url: string, destPath: string): Promise<boolean> {
   return new Promise((resolve) => {
     const file = createWriteStream(destPath);
-    https.get(url, (response) => {
-      if (response.statusCode === 200) {
-        response.pipe(file);
-        file.on('finish', () => {
+    https
+      .get(url, (response) => {
+        if (response.statusCode === 200) {
+          response.pipe(file);
+          file.on('finish', () => {
+            file.close();
+            resolve(true);
+          });
+        } else {
           file.close();
-          resolve(true);
-        });
-      } else {
+          resolve(false);
+        }
+      })
+      .on('error', () => {
         file.close();
         resolve(false);
-      }
-    }).on('error', () => {
-      file.close();
-      resolve(false);
-    });
+      });
   });
 }
 
 // Helper: Parse Binance CSV and return candle objects
-function parseBinanceCSV(filePath: string, symbol: string): Array<{
+function parseBinanceCSV(
+  filePath: string,
+  symbol: string,
+): Array<{
   timestamp: string;
   open: number;
   high: number;
@@ -63,29 +79,26 @@ function parseBinanceCSV(filePath: string, symbol: string): Array<{
   volume: number;
 }> {
   const content = readFileSync(filePath, 'utf-8');
-  const lines = content.split('\n').filter(line => line.trim());
+  const lines = content.split('\n').filter((line) => line.trim());
   const dataLines = lines.slice(1); // Skip header
 
-  return dataLines.map(line => {
+  return dataLines.map((line) => {
     const parts = line.split(',');
     const [open_time, open, high, low, close, volume] = parts;
     return {
-      timestamp: convertUnixToISO(parseInt(open_time)),
-      open: parseFloat(open),
-      high: parseFloat(high),
-      low: parseFloat(low),
-      close: parseFloat(close),
-      volume: parseFloat(volume),
+      timestamp: convertUnixToISO(Number.parseInt(open_time)),
+      open: Number.parseFloat(open),
+      high: Number.parseFloat(high),
+      low: Number.parseFloat(low),
+      close: Number.parseFloat(close),
+      volume: Number.parseFloat(volume),
     };
   });
 }
 
 const program = new Command();
 
-program
-  .name('live-engine')
-  .description('CLI for Live Engine trading platform')
-  .version('0.1.0');
+program.name('live-engine').description('CLI for Live Engine trading platform').version('0.1.0');
 
 program
   .command('start')
@@ -104,34 +117,43 @@ program
   .option('-l, --limit <limit>', 'Number of candles', '500')
   .action(async (symbol, options) => {
     try {
-      console.log(`📥 Downloading ${options.limit} ${options.interval} candles for ${symbol.toUpperCase()}...`);
+      console.log(
+        `📥 Downloading ${options.limit} ${options.interval} candles for ${symbol.toUpperCase()}...`,
+      );
 
       // Fetch from Binance
       const candles = await fetchHistoricalCandles(
         symbol.toLowerCase() as Asset,
         options.interval,
-        parseInt(options.limit)
+        Number.parseInt(options.limit),
       );
 
       console.log(`✓ Fetched ${candles.length} candles from Binance`);
 
       // Store in Supabase
-      const insertData = candles.map((candle: any) => ({
-        asset: symbol.toLowerCase(),
-        timestamp: candle.timestamp,
-        open: candle.open,
-        high: candle.high,
-        low: candle.low,
-        close: candle.close,
-        volume: candle.volume,
-        source: 'binance',
-      }));
+      const insertData = candles.map(
+        (candle: {
+          timestamp: string;
+          open: number;
+          high: number;
+          low: number;
+          close: number;
+          volume: number;
+        }) => ({
+          asset: symbol.toLowerCase(),
+          timestamp: candle.timestamp,
+          open: candle.open,
+          high: candle.high,
+          low: candle.low,
+          close: candle.close,
+          volume: candle.volume,
+          source: 'binance',
+        }),
+      );
 
-      const { error } = await supabaseAdmin
-        .from('market_data')
-        .upsert(insertData, {
-          onConflict: 'asset,timestamp',
-        });
+      const { error } = await supabaseAdmin.from('market_data').upsert(insertData, {
+        onConflict: 'asset,timestamp',
+      });
 
       if (error) {
         console.error('❌ Error storing data:', error.message);
@@ -139,9 +161,10 @@ program
       }
 
       console.log(`✓ Stored ${candles.length} candles in Supabase`);
-      console.log(`\n📊 Data range: ${candles[candles.length - 1].timestamp} to ${candles[0].timestamp}`);
+      console.log(
+        `\n📊 Data range: ${candles[candles.length - 1].timestamp} to ${candles[0].timestamp}`,
+      );
       console.log(`💰 Latest price: $${candles[0].close}`);
-
     } catch (error) {
       console.error('❌ Download failed:', error instanceof Error ? error.message : error);
       process.exit(1);
@@ -156,26 +179,38 @@ program
   .option('-e, --end <date>', 'End date (YYYY-MM-DD)', '2025-11-23')
   .action(async (symbol, options) => {
     try {
-      console.log(`📥 Downloading ${symbol.toUpperCase()} ${options.interval} candles from ${options.start} to ${options.end}...`);
+      console.log(
+        `📥 Downloading ${symbol.toUpperCase()} ${options.interval} candles from ${options.start} to ${options.end}...`,
+      );
 
       const startDate = new Date(options.start).getTime();
       const endDate = new Date(options.end).getTime();
-      const intervalMs = options.interval === '1m' ? 60000 : options.interval === '5m' ? 300000 : 3600000;
+      const intervalMs =
+        options.interval === '1m' ? 60000 : options.interval === '5m' ? 300000 : 3600000;
 
-      let allCandles: any[] = [];
+      let allCandles: {
+        timestamp: string;
+        open: number;
+        high: number;
+        low: number;
+        close: number;
+        volume: number;
+      }[] = [];
       let currentEnd = endDate;
       let batch = 0;
 
       // Fetch in batches of 1000 (Binance limit), going backwards
       while (currentEnd > startDate) {
         batch++;
-        console.log(`  Batch ${batch}: Fetching 1000 candles ending at ${new Date(currentEnd).toISOString()}...`);
+        console.log(
+          `  Batch ${batch}: Fetching 1000 candles ending at ${new Date(currentEnd).toISOString()}...`,
+        );
 
         const candles = await fetchHistoricalCandles(
           symbol.toLowerCase() as Asset,
           options.interval,
           1000,
-          currentEnd
+          currentEnd,
         );
 
         if (candles.length === 0) break;
@@ -184,11 +219,11 @@ program
         currentEnd = new Date(candles[candles.length - 1].timestamp).getTime() - intervalMs;
 
         // Respect rate limits
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
 
       // Filter to exact date range
-      allCandles = allCandles.filter(c => {
+      allCandles = allCandles.filter((c) => {
         const ts = new Date(c.timestamp).getTime();
         return ts >= startDate && ts <= endDate;
       });
@@ -199,7 +234,7 @@ program
       const batchSize = 500;
       for (let i = 0; i < allCandles.length; i += batchSize) {
         const batch = allCandles.slice(i, i + batchSize);
-        const insertData = batch.map((candle: any) => ({
+        const insertData = batch.map((candle) => ({
           asset: symbol.toLowerCase(),
           timestamp: candle.timestamp,
           open: candle.open,
@@ -222,19 +257,33 @@ program
       }
 
       // Export to CSV (Lona-compatible format)
-      mkdirSync(join(process.cwd(), 'data', 'binance', symbol.toLowerCase(), options.interval), { recursive: true });
-      const csvPath = join(process.cwd(), 'data', 'binance', symbol.toLowerCase(), options.interval, `${symbol.toUpperCase()}-${options.interval}-${options.start}-to-${options.end}.csv`);
+      mkdirSync(join(process.cwd(), 'data', 'binance', symbol.toLowerCase(), options.interval), {
+        recursive: true,
+      });
+      const csvPath = join(
+        process.cwd(),
+        'data',
+        'binance',
+        symbol.toLowerCase(),
+        options.interval,
+        `${symbol.toUpperCase()}-${options.interval}-${options.start}-to-${options.end}.csv`,
+      );
 
       // Lona format: Timestamp, Symbol, Open, High, Low, Close, Volume
       const csvHeader = 'Timestamp,Symbol,Open,High,Low,Close,Volume\n';
-      const csvRows = allCandles.map(c =>
-        `${c.timestamp},${symbol.toUpperCase()}-PERPETUAL,${c.open},${c.high},${c.low},${c.close},${c.volume}`
-      ).join('\n');
+      const csvRows = allCandles
+        .map(
+          (c) =>
+            `${c.timestamp},${symbol.toUpperCase()}-PERPETUAL,${c.open},${c.high},${c.low},${c.close},${c.volume}`,
+        )
+        .join('\n');
 
       writeFileSync(csvPath, csvHeader + csvRows);
       console.log(`\n✓ Exported to CSV: ${csvPath}`);
       console.log(`📊 Total candles: ${allCandles.length}`);
-      console.log(`📅 Date range: ${allCandles[allCandles.length - 1]?.timestamp} to ${allCandles[0]?.timestamp}`);
+      console.log(
+        `📅 Date range: ${allCandles[allCandles.length - 1]?.timestamp} to ${allCandles[0]?.timestamp}`,
+      );
       console.log(`💰 Latest price: $${allCandles[0]?.close}`);
     } catch (error) {
       console.error('❌ Download failed:', error instanceof Error ? error.message : error);
@@ -269,14 +318,26 @@ program
       console.log(`✓ Found ${candles.length} candles in Supabase`);
 
       // Export to CSV (Lona-compatible format, different filename to avoid overwriting)
-      mkdirSync(join(process.cwd(), 'data', 'binance', symbol.toLowerCase(), options.interval), { recursive: true });
-      const csvPath = join(process.cwd(), 'data', 'binance', symbol.toLowerCase(), options.interval, `${symbol.toUpperCase()}-${options.interval}-${options.start}-to-${options.end}-exported.csv`);
+      mkdirSync(join(process.cwd(), 'data', 'binance', symbol.toLowerCase(), options.interval), {
+        recursive: true,
+      });
+      const csvPath = join(
+        process.cwd(),
+        'data',
+        'binance',
+        symbol.toLowerCase(),
+        options.interval,
+        `${symbol.toUpperCase()}-${options.interval}-${options.start}-to-${options.end}-exported.csv`,
+      );
 
       // Lona format: Timestamp, Symbol, Open, High, Low, Close, Volume
       const csvHeader = 'Timestamp,Symbol,Open,High,Low,Close,Volume\n';
-      const csvRows = candles.map(c =>
-        `${c.timestamp},${symbol.toUpperCase()}-PERPETUAL,${c.open},${c.high},${c.low},${c.close},${c.volume}`
-      ).join('\n');
+      const csvRows = candles
+        .map(
+          (c) =>
+            `${c.timestamp},${symbol.toUpperCase()}-PERPETUAL,${c.open},${c.high},${c.low},${c.close},${c.volume}`,
+        )
+        .join('\n');
 
       writeFileSync(csvPath, csvHeader + csvRows);
       console.log(`\n✓ Exported to CSV: ${csvPath}`);
@@ -318,7 +379,7 @@ program
         process.exit(1);
       }
 
-      console.log(`\n🔄 Converting Python to TypeScript...`);
+      console.log('\n🔄 Converting Python to TypeScript...');
       console.log(`   Code length: ${pythonCode.length} characters\n`);
 
       const result = await convertPythonToTypescript(pythonCode);
@@ -359,7 +420,6 @@ program
       }
 
       await flushTraces();
-
     } catch (error) {
       console.error('❌ Conversion failed:', error instanceof Error ? error.message : error);
       await flushTraces();
@@ -397,7 +457,7 @@ program
 
       // Download monthly files
       console.log('\n📦 Downloading monthly archives...');
-      let currentDate = new Date(startDate);
+      const currentDate = new Date(startDate);
       while (currentDate <= endDate) {
         const year = currentDate.getFullYear();
         const month = String(currentDate.getMonth() + 1).padStart(2, '0');
@@ -455,14 +515,14 @@ program
 
       // Find and process all CSV files
       const csvFiles = readdirSync(outputDir)
-        .filter(f => f.endsWith('.csv') && !f.endsWith('-lona.csv'))
-        .filter(f => {
+        .filter((f) => f.endsWith('.csv') && !f.endsWith('-lona.csv'))
+        .filter((f) => {
           // Filter to date range
           const match = f.match(/(\d{4})-(\d{2})(?:-(\d{2}))?/);
           if (!match) return false;
-          const fileYear = parseInt(match[1]);
-          const fileMonth = parseInt(match[2]);
-          const fileDay = match[3] ? parseInt(match[3]) : 1;
+          const fileYear = Number.parseInt(match[1]);
+          const fileMonth = Number.parseInt(match[2]);
+          const fileDay = match[3] ? Number.parseInt(match[3]) : 1;
           const fileDate = new Date(fileYear, fileMonth - 1, fileDay);
           return fileDate >= startDate && fileDate <= endDate;
         })
@@ -471,7 +531,7 @@ program
       console.log(`\n✓ Found ${csvFiles.length} CSV files to process`);
 
       // Parse all candles
-      let allCandles: Array<{
+      const allCandles: Array<{
         timestamp: string;
         open: number;
         high: number;
@@ -488,8 +548,8 @@ program
 
       // Sort by timestamp and remove duplicates
       allCandles.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
-      const uniqueCandles = allCandles.filter((c, i, arr) =>
-        i === 0 || c.timestamp !== arr[i - 1].timestamp
+      const uniqueCandles = allCandles.filter(
+        (c, i, arr) => i === 0 || c.timestamp !== arr[i - 1].timestamp,
       );
 
       console.log(`\n📊 Total unique candles: ${uniqueCandles.length}`);
@@ -502,7 +562,7 @@ program
 
         for (let i = 0; i < uniqueCandles.length; i += batchSize) {
           const batch = uniqueCandles.slice(i, i + batchSize);
-          const insertData = batch.map(candle => ({
+          const insertData = batch.map((candle) => ({
             asset: symbolLower,
             timestamp: candle.timestamp,
             open: candle.open,
@@ -532,16 +592,18 @@ program
         const csvPath = join(outputDir, `${symbolUpper}-${interval}-${start}-to-${end}-lona.csv`);
 
         const csvHeader = 'Timestamp,Symbol,Open,High,Low,Close,Volume\n';
-        const csvRows = uniqueCandles.map(c =>
-          `${c.timestamp},${symbolUpper}-PERPETUAL,${c.open},${c.high},${c.low},${c.close},${c.volume}`
-        ).join('\n');
+        const csvRows = uniqueCandles
+          .map(
+            (c) =>
+              `${c.timestamp},${symbolUpper}-PERPETUAL,${c.open},${c.high},${c.low},${c.close},${c.volume}`,
+          )
+          .join('\n');
 
         writeFileSync(csvPath, csvHeader + csvRows);
         console.log(`\n📄 Exported to: ${csvPath}`);
       }
 
       console.log(`\n✅ Done! ${uniqueCandles.length} candles from ${start} to ${end}`);
-
     } catch (error) {
       console.error('❌ Bulk download failed:', error instanceof Error ? error.message : error);
       process.exit(1);
@@ -573,9 +635,12 @@ program
 
       // Write Lona format CSV
       const csvHeader = 'Timestamp,Symbol,Open,High,Low,Close,Volume\n';
-      const csvRows = candles.map(c =>
-        `${c.timestamp},${symbolUpper}-PERPETUAL,${c.open},${c.high},${c.low},${c.close},${c.volume}`
-      ).join('\n');
+      const csvRows = candles
+        .map(
+          (c) =>
+            `${c.timestamp},${symbolUpper}-PERPETUAL,${c.open},${c.high},${c.low},${c.close},${c.volume}`,
+        )
+        .join('\n');
 
       writeFileSync(outputPath, csvHeader + csvRows);
       console.log(`✓ Exported to: ${outputPath}`);
@@ -588,7 +653,7 @@ program
 
         for (let i = 0; i < candles.length; i += batchSize) {
           const batch = candles.slice(i, i + batchSize);
-          const insertData = batch.map(candle => ({
+          const insertData = batch.map((candle) => ({
             asset: symbol,
             timestamp: candle.timestamp,
             open: candle.open,
@@ -611,8 +676,9 @@ program
       }
 
       console.log(`\n📊 Total: ${candles.length} candles`);
-      console.log(`📅 Range: ${candles[0]?.timestamp} to ${candles[candles.length - 1]?.timestamp}`);
-
+      console.log(
+        `📅 Range: ${candles[0]?.timestamp} to ${candles[candles.length - 1]?.timestamp}`,
+      );
     } catch (error) {
       console.error('❌ Conversion failed:', error instanceof Error ? error.message : error);
       process.exit(1);
@@ -637,9 +703,9 @@ program
       // Find matching files
       const allFiles = readdirSync(dir);
       const files = allFiles
-        .filter(f => f.endsWith('-lona.csv') && !f.includes('-to-'))
+        .filter((f) => f.endsWith('-lona.csv') && !f.includes('-to-'))
         .sort()
-        .map(f => join(dir, f));
+        .map((f) => join(dir, f));
 
       if (files.length === 0) {
         console.log('❌ No matching files found');
@@ -649,14 +715,17 @@ program
       console.log(`✓ Found ${files.length} files to merge`);
 
       // Read and merge all files
-      interface CandleRow { timestamp: string; line: string; }
+      interface CandleRow {
+        timestamp: string;
+        line: string;
+      }
       const allRows: CandleRow[] = [];
       let header = '';
 
       for (const file of files) {
         console.log(`  Reading: ${file}`);
         const content = readFileSync(file, 'utf-8');
-        const lines = content.split('\n').filter(line => line.trim());
+        const lines = content.split('\n').filter((line) => line.trim());
 
         if (!header && lines.length > 0) {
           header = lines[0];
@@ -673,27 +742,29 @@ program
       allRows.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
 
       // Write merged file
-      const mergedContent = header + '\n' + allRows.map(r => r.line).join('\n');
+      const mergedContent = `${header}\n${allRows.map((r) => r.line).join('\n')}`;
       writeFileSync(output, mergedContent);
 
       console.log(`\n✅ Merged ${allRows.length} candles -> ${output}`);
-      console.log(`📅 Range: ${allRows[0]?.timestamp} to ${allRows[allRows.length - 1]?.timestamp}`);
+      console.log(
+        `📅 Range: ${allRows[0]?.timestamp} to ${allRows[allRows.length - 1]?.timestamp}`,
+      );
 
       // Optionally store in Supabase
       if (options.store) {
         const symbol = options.symbol.toLowerCase();
         console.log('\n💾 Storing in Supabase...');
 
-        const candles = allRows.map(r => {
+        const candles = allRows.map((r) => {
           const parts = r.line.split(',');
           return {
             asset: symbol,
             timestamp: parts[0],
-            open: parseFloat(parts[2]),
-            high: parseFloat(parts[3]),
-            low: parseFloat(parts[4]),
-            close: parseFloat(parts[5]),
-            volume: parseFloat(parts[6]),
+            open: Number.parseFloat(parts[2]),
+            high: Number.parseFloat(parts[3]),
+            low: Number.parseFloat(parts[4]),
+            close: Number.parseFloat(parts[5]),
+            volume: Number.parseFloat(parts[6]),
             source: 'binance',
           };
         });
@@ -713,7 +784,6 @@ program
         }
         console.log(`✓ Stored ${stored} candles in Supabase`);
       }
-
     } catch (error) {
       console.error('❌ Merge failed:', error instanceof Error ? error.message : error);
       process.exit(1);

@@ -1,16 +1,16 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
 import {
-  createChart,
-  ColorType,
-  IChartApi,
-  ISeriesApi,
-  CandlestickData,
-  CandlestickSeriesPartialOptions,
+  type CandlestickData,
   CandlestickSeries,
-  Time,
+  type CandlestickSeriesPartialOptions,
+  ColorType,
+  type IChartApi,
+  ISeriesApi,
+  type Time,
+  createChart,
 } from 'lightweight-charts';
+import { useEffect, useRef } from 'react';
 
 type CandleData = {
   time: number | string;

@@ -1,7 +1,9 @@
 'use client';
 
-import Editor, { OnMount } from '@monaco-editor/react';
+import Editor, { type OnMount } from '@monaco-editor/react';
 import { useCallback, useRef } from 'react';
+
+type MonacoEditor = Parameters<OnMount>[0];
 
 interface CodeEditorProps {
   value: string;
@@ -20,7 +22,7 @@ export function CodeEditor({
   height = '400px',
   className,
 }: CodeEditorProps) {
-  const editorRef = useRef<any>(null);
+  const editorRef = useRef<MonacoEditor | null>(null);
 
   const handleEditorDidMount: OnMount = useCallback((editor) => {
     editorRef.current = editor;
@@ -32,7 +34,7 @@ export function CodeEditor({
         onChange(val);
       }
     },
-    [onChange]
+    [onChange],
   );
 
   return (

@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { logStrategyEvent, runStrategy } from '@/lib/strategy/executor';
 import { supabaseAdmin } from '@/lib/supabase';
-import { runStrategy, logStrategyEvent } from '@/lib/strategy/executor';
 import type { Strategy, StrategyResult } from '@/lib/types/strategy';
+import { type NextRequest, NextResponse } from 'next/server';
 
 /**
  * Vercel Cron Job: /api/cron/strategies
@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
     console.error('Cron job error:', error);
     return NextResponse.json(
       { error: 'Cron job failed', message: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -162,7 +162,7 @@ async function executeTrade(strategy: Strategy, result: StrategyResult): Promise
       return;
     }
 
-    const currentPrice = parseFloat(latestCandle.close);
+    const currentPrice = Number.parseFloat(latestCandle.close);
     const amount = result.amount || 0.001; // Default small amount for paper trading
     const total = currentPrice * amount;
 
@@ -207,7 +207,7 @@ async function executeTrade(strategy: Strategy, result: StrategyResult): Promise
         price: currentPrice,
         total,
         reason: result.reason,
-      }
+      },
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

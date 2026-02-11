@@ -1,10 +1,10 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import type {
+  CandleData,
+  Position,
   Strategy,
   StrategyContext,
   StrategyResult,
-  CandleData,
-  Position,
 } from '@/lib/types/strategy';
 
 /**
@@ -13,7 +13,7 @@ import type {
  */
 export async function executeStrategy(
   typescriptCode: string,
-  context: StrategyContext
+  context: StrategyContext,
 ): Promise<StrategyResult> {
   try {
     // Create a sandboxed function with the strategy code
@@ -40,7 +40,7 @@ export async function executeStrategy(
     const result = await Promise.race([
       Promise.resolve(strategyFn(context)),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Strategy execution timeout')), 5000)
+        setTimeout(() => reject(new Error('Strategy execution timeout')), 5000),
       ),
     ]);
 
@@ -70,7 +70,7 @@ export async function logStrategyEvent(
   strategyId: string,
   level: 'info' | 'signal' | 'trade' | 'error',
   message: string,
-  data: Record<string, unknown> = {}
+  data: Record<string, unknown> = {},
 ): Promise<void> {
   try {
     await supabaseAdmin.from('strategy_logs').insert({
@@ -90,7 +90,7 @@ export async function logStrategyEvent(
 export async function updateStrategyStatus(
   strategyId: string,
   status: Strategy['status'],
-  additionalFields: Partial<Strategy> = {}
+  additionalFields: Partial<Strategy> = {},
 ): Promise<void> {
   try {
     await supabaseAdmin
@@ -111,7 +111,7 @@ export async function updateStrategyStatus(
  */
 export async function getCurrentPosition(
   portfolioId: string,
-  asset: string
+  asset: string,
 ): Promise<Position | null> {
   try {
     // Get all trades for this asset in the portfolio
@@ -133,11 +133,11 @@ export async function getCurrentPosition(
 
     for (const trade of trades) {
       if (trade.type === 'buy') {
-        quantity += parseFloat(trade.quantity);
-        totalCost += parseFloat(trade.total);
+        quantity += Number.parseFloat(trade.quantity);
+        totalCost += Number.parseFloat(trade.total);
       } else {
-        quantity -= parseFloat(trade.quantity);
-        totalCost -= parseFloat(trade.total);
+        quantity -= Number.parseFloat(trade.quantity);
+        totalCost -= Number.parseFloat(trade.total);
       }
     }
 
@@ -164,10 +164,7 @@ export async function getCurrentPosition(
 /**
  * Fetch recent candles for a strategy
  */
-export async function fetchRecentCandles(
-  asset: string,
-  limit: number = 100
-): Promise<CandleData[]> {
+export async function fetchRecentCandles(asset: string, limit = 100): Promise<CandleData[]> {
   try {
     const { data } = await supabaseAdmin
       .from('market_data')
@@ -181,11 +178,11 @@ export async function fetchRecentCandles(
     // Reverse to get chronological order
     return data.reverse().map((candle) => ({
       timestamp: candle.timestamp,
-      open: parseFloat(candle.open),
-      high: parseFloat(candle.high),
-      low: parseFloat(candle.low),
-      close: parseFloat(candle.close),
-      volume: parseFloat(candle.volume),
+      open: Number.parseFloat(candle.open),
+      high: Number.parseFloat(candle.high),
+      low: Number.parseFloat(candle.low),
+      close: Number.parseFloat(candle.close),
+      volume: Number.parseFloat(candle.volume),
     }));
   } catch (error) {
     console.error('Failed to fetch recent candles:', error);
@@ -220,7 +217,8 @@ export async function runStrategy(strategy: Strategy): Promise<StrategyResult> {
       if (position) {
         position.current_price = currentPrice;
         position.pnl = (currentPrice - position.entry_price) * position.quantity;
-        position.pnl_percentage = ((currentPrice - position.entry_price) / position.entry_price) * 100;
+        position.pnl_percentage =
+          ((currentPrice - position.entry_price) / position.entry_price) * 100;
       }
     }
 
@@ -253,7 +251,7 @@ export async function runStrategy(strategy: Strategy): Promise<StrategyResult> {
         executionTime,
         indicators: result.indicators,
         position: position ? { quantity: position.quantity, pnl: position.pnl } : null,
-      }
+      },
     );
 
     return result;

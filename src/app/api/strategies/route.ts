@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUserId } from '@/lib/service-auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import type { CreateStrategyInput, UpdateStrategyInput } from '@/lib/types/strategy';
+import { type NextRequest, NextResponse } from 'next/server';
 
 /**
  * GET /api/strategies - List user's strategies
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     if (!body.name || !body.python_code || !body.typescript_code) {
       return NextResponse.json(
         { error: 'Missing required fields: name, python_code, typescript_code' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 

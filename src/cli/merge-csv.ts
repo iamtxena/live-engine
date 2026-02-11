@@ -10,8 +10,8 @@
  *   pnpm tsx src/cli/merge-csv.ts data/binance/btcusdt/1m/BTCUSDT-1m-2025-10-to-11-lona.csv data/binance/btcusdt/1m/*-lona.csv
  */
 
-import { readFileSync, writeFileSync, readdirSync } from 'fs';
-import { join, dirname } from 'path';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 
 interface CandleRow {
   timestamp: string;
@@ -28,8 +28,8 @@ function mergeCSVFiles(outputPath: string, pattern: string) {
   // Find all matching files
   const allFiles = readdirSync(dir);
   const files = allFiles
-    .filter(f => f.endsWith('-lona.csv'))
-    .map(f => join(dir, f))
+    .filter((f) => f.endsWith('-lona.csv'))
+    .map((f) => join(dir, f))
     .sort();
 
   if (files.length === 0) {
@@ -46,7 +46,7 @@ function mergeCSVFiles(outputPath: string, pattern: string) {
   for (const file of files) {
     console.log(`  Reading: ${file}`);
     const content = readFileSync(file, 'utf-8');
-    const lines = content.split('\n').filter(line => line.trim());
+    const lines = content.split('\n').filter((line) => line.trim());
 
     // Get header from first file
     if (!header && lines.length > 0) {
@@ -64,16 +64,18 @@ function mergeCSVFiles(outputPath: string, pattern: string) {
   console.log(`✓ Total rows collected: ${allRows.length}`);
 
   // Sort by timestamp
-  console.log(`🔄 Sorting by timestamp...`);
+  console.log('🔄 Sorting by timestamp...');
   allRows.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
 
   // Write merged file
-  const output = header + '\n' + allRows.map(row => row.line).join('\n');
+  const output = `${header}\n${allRows.map((row) => row.line).join('\n')}`;
   writeFileSync(outputPath, output);
 
   console.log(`\n✅ Merged file created: ${outputPath}`);
   console.log(`📊 Total candles: ${allRows.length}`);
-  console.log(`📅 Date range: ${allRows[0]?.timestamp} to ${allRows[allRows.length - 1]?.timestamp}`);
+  console.log(
+    `📅 Date range: ${allRows[0]?.timestamp} to ${allRows[allRows.length - 1]?.timestamp}`,
+  );
 
   // Show sample
   const sample = output.split('\n').slice(0, 4).join('\n');
@@ -84,7 +86,9 @@ function mergeCSVFiles(outputPath: string, pattern: string) {
 const args = process.argv.slice(2);
 if (args.length < 2) {
   console.error('Usage: pnpm tsx src/cli/merge-csv.ts <output-file> <pattern>');
-  console.error('Example: pnpm tsx src/cli/merge-csv.ts merged.csv "data/binance/btcusdt/1m/*-lona.csv"');
+  console.error(
+    'Example: pnpm tsx src/cli/merge-csv.ts merged.csv "data/binance/btcusdt/1m/*-lona.csv"',
+  );
   process.exit(1);
 }
 

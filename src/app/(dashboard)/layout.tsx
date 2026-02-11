@@ -1,7 +1,7 @@
-import Link from 'next/link';
-import { UserButton } from '@clerk/nextjs';
-import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
+import { Button } from '@/components/ui/button';
+import { UserButton } from '@clerk/nextjs';
+import Link from 'next/link';
 
 export default function DashboardLayout({
   children,
@@ -85,11 +85,7 @@ export default function DashboardLayout({
             >
               GitHub
             </Link>
-            <Link
-              href="https://lona.agency"
-              target="_blank"
-              className="hover:text-primary"
-            >
+            <Link href="https://lona.agency" target="_blank" className="hover:text-primary">
               Lona
             </Link>
           </div>

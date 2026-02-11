@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getBinanceWSClient, type Asset } from '@/lib/binance';
+import { type Asset, getBinanceWSClient } from '@/lib/binance';
+import { type NextRequest, NextResponse } from 'next/server';
 
 /**
  * API Route: /api/websocket
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     if (!assets || !Array.isArray(assets)) {
       return NextResponse.json(
         { error: 'Invalid assets parameter. Expected array of asset symbols.' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -30,10 +30,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('WebSocket connection error:', error);
-    return NextResponse.json(
-      { error: 'Failed to start WebSocket connection' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to start WebSocket connection' }, { status: 500 });
   }
 }
 
@@ -51,9 +48,6 @@ export async function DELETE() {
     });
   } catch (error) {
     console.error('WebSocket disconnect error:', error);
-    return NextResponse.json(
-      { error: 'Failed to disconnect WebSocket' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to disconnect WebSocket' }, { status: 500 });
   }
 }

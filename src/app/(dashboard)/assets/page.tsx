@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useMarketStore } from '@/lib/stores/market-store';
-import { useHistoricalData } from '@/lib/hooks/use-market-data';
 import { CandlestickChart } from '@/components/charts/candlestick-chart';
 import { LiveTicker } from '@/components/trading/live-ticker';
 import { TradesTable } from '@/components/trading/trades-table';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useHistoricalData } from '@/lib/hooks/use-market-data';
+import { useMarketStore } from '@/lib/stores/market-store';
+import { useState } from 'react';
 
 const ASSETS = ['btcusdt', 'ethusdt', 'bnbusdt', 'solusdt'];
 
@@ -93,19 +93,23 @@ export default function AssetsPage() {
       )}
 
       {/* Asset Tabs */}
-      <Tabs defaultValue="btc" className="w-full" onValueChange={(val) => {
-        const tab = ASSET_TABS.find(t => t.id === val);
-        if (tab) setSelectedAsset(tab.asset);
-      }}>
+      <Tabs
+        defaultValue="btc"
+        className="w-full"
+        onValueChange={(val) => {
+          const tab = ASSET_TABS.find((t) => t.id === val);
+          if (tab) setSelectedAsset(tab.asset);
+        }}
+      >
         <TabsList>
-          {ASSET_TABS.map(tab => (
+          {ASSET_TABS.map((tab) => (
             <TabsTrigger key={tab.id} value={tab.id}>
               {tab.label}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        {ASSET_TABS.map(tab => (
+        {ASSET_TABS.map((tab) => (
           <TabsContent key={tab.id} value={tab.id} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-3">
               <div className="md:col-span-2 space-y-4">

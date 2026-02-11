@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { CodeEditor } from '@/components/editors/code-editor';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
 
 const SAMPLE_PYTHON = `# SMA Crossover Strategy
 def calculate_sma(prices, period):
@@ -54,7 +54,9 @@ interface ConversionResult {
 
 export default function ConvertPage() {
   const [pythonCode, setPythonCode] = useState(SAMPLE_PYTHON);
-  const [typescriptCode, setTypescriptCode] = useState('// TypeScript code will appear here after conversion');
+  const [typescriptCode, setTypescriptCode] = useState(
+    '// TypeScript code will appear here after conversion',
+  );
   const [strategyName, setStrategyName] = useState('');
   const [validateCode, setValidateCode] = useState(true);
   const [explainCode, setExplainCode] = useState(true);
@@ -178,9 +180,7 @@ export default function ConvertPage() {
           </Button>
 
           {convertMutation.isError && (
-            <Badge variant="destructive">
-              Error: {convertMutation.error?.message}
-            </Badge>
+            <Badge variant="destructive">Error: {convertMutation.error?.message}</Badge>
           )}
         </div>
       </Card>
@@ -193,7 +193,9 @@ export default function ConvertPage() {
                 <h2 className="mb-4 text-lg font-semibold">Validation</h2>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <Badge variant={conversionResult.validation.isValid ? 'default' : 'destructive'}>
+                    <Badge
+                      variant={conversionResult.validation.isValid ? 'default' : 'destructive'}
+                    >
                       {conversionResult.validation.isValid ? 'Valid' : 'Invalid'}
                     </Badge>
                   </div>
@@ -202,8 +204,8 @@ export default function ConvertPage() {
                     <div>
                       <h3 className="mb-2 text-sm font-medium text-muted-foreground">Issues:</h3>
                       <ul className="list-inside list-disc space-y-1 text-sm">
-                        {conversionResult.validation.issues.map((issue, i) => (
-                          <li key={i} className="text-destructive">
+                        {conversionResult.validation.issues.map((issue) => (
+                          <li key={issue} className="text-destructive">
                             {issue}
                           </li>
                         ))}
@@ -213,10 +215,12 @@ export default function ConvertPage() {
 
                   {conversionResult.validation.suggestions.length > 0 && (
                     <div>
-                      <h3 className="mb-2 text-sm font-medium text-muted-foreground">Suggestions:</h3>
+                      <h3 className="mb-2 text-sm font-medium text-muted-foreground">
+                        Suggestions:
+                      </h3>
                       <ul className="list-inside list-disc space-y-1 text-sm">
-                        {conversionResult.validation.suggestions.map((suggestion, i) => (
-                          <li key={i}>{suggestion}</li>
+                        {conversionResult.validation.suggestions.map((suggestion) => (
+                          <li key={suggestion}>{suggestion}</li>
                         ))}
                       </ul>
                     </div>
@@ -230,10 +234,12 @@ export default function ConvertPage() {
               <div className="space-y-3">
                 {conversionResult.conversion.dependencies.length > 0 && (
                   <div>
-                    <h3 className="mb-2 text-sm font-medium text-muted-foreground">Dependencies:</h3>
+                    <h3 className="mb-2 text-sm font-medium text-muted-foreground">
+                      Dependencies:
+                    </h3>
                     <div className="flex flex-wrap gap-2">
-                      {conversionResult.conversion.dependencies.map((dep, i) => (
-                        <Badge key={i} variant="secondary">
+                      {conversionResult.conversion.dependencies.map((dep) => (
+                        <Badge key={dep} variant="secondary">
                           {dep}
                         </Badge>
                       ))}
@@ -250,7 +256,9 @@ export default function ConvertPage() {
 
                 {conversionResult.conversion.intent && (
                   <div>
-                    <h3 className="mb-2 text-sm font-medium text-muted-foreground">Original Intent:</h3>
+                    <h3 className="mb-2 text-sm font-medium text-muted-foreground">
+                      Original Intent:
+                    </h3>
                     <p className="text-sm">{conversionResult.conversion.intent}</p>
                   </div>
                 )}
@@ -286,14 +294,10 @@ export default function ConvertPage() {
                 {saveStrategyMutation.isPending ? 'Saving...' : 'Save Strategy'}
               </Button>
 
-              {saveStrategyMutation.isSuccess && (
-                <Badge variant="default">Strategy saved!</Badge>
-              )}
+              {saveStrategyMutation.isSuccess && <Badge variant="default">Strategy saved!</Badge>}
 
               {saveStrategyMutation.isError && (
-                <Badge variant="destructive">
-                  Error: {saveStrategyMutation.error?.message}
-                </Badge>
+                <Badge variant="destructive">Error: {saveStrategyMutation.error?.message}</Badge>
               )}
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
