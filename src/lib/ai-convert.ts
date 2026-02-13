@@ -10,7 +10,7 @@ const { generateText: wrappedGenerateText, generateObject: wrappedGenerateObject
  * Schema for structured Python → TypeScript conversion
  */
 const conversionSchema = z.object({
-  typescript_code: z.string().describe('Converted TypeScript code'),
+  typescript_code: z.string().describe('Converted runtime-safe JavaScript code'),
   dependencies: z.array(z.string()).describe('Required npm packages'),
   notes: z.string().describe('Conversion notes and recommendations'),
   original_intent: z.string().describe('Summary of what the Python code does'),

@@ -20,6 +20,7 @@ async function loadTypeScriptModule(): Promise<TypeScriptModule> {
     typeScriptModulePromise = import('typescript')
       .then((mod) => mod.default ?? mod)
       .catch((error) => {
+        typeScriptModulePromise = null;
         const detail = error instanceof Error ? error.message : String(error);
         throw new Error(
           `TypeScript runtime dependency is required for strategy transpilation. Ensure "typescript" is installed in production dependencies. Original error: ${detail}`,
@@ -83,6 +84,7 @@ function sanitizeForExecution(code: string): string {
       if (trimmed.startsWith('export class ')) return line.replace('export class ', 'class ');
       if (trimmed.startsWith('export const ')) return line.replace('export const ', 'const ');
       if (trimmed.startsWith('export let ')) return line.replace('export let ', 'let ');
+      if (trimmed.startsWith('export var ')) return line.replace('export var ', 'var ');
       // Remove "export default" prefix
       if (trimmed.startsWith('export default ')) return line.replace('export default ', '');
       // Remove bare "export { ... }" re-exports
