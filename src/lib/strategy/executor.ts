@@ -7,6 +7,58 @@ import type {
   StrategyResult,
 } from '@/lib/types/strategy';
 
+type TypeScriptModule = typeof import('typescript');
+
+let typeScriptModulePromise: Promise<TypeScriptModule | null> | null = null;
+
+/**
+ * Lazily load TypeScript only when executing strategies.
+ * This keeps startup lighter while allowing robust TS -> JS transpilation.
+ */
+async function loadTypeScriptModule(): Promise<TypeScriptModule | null> {
+  if (!typeScriptModulePromise) {
+    typeScriptModulePromise = import('typescript')
+      .then((mod) => mod.default ?? mod)
+      .catch(() => null);
+  }
+  return typeScriptModulePromise;
+}
+
+/**
+ * Transpile generated TypeScript to JavaScript before executing in Function().
+ * This prevents parse errors like "Unexpected identifier 'Exchange'" caused by
+ * type annotations/interfaces emitted by AI conversion.
+ */
+async function transpileForExecution(code: string): Promise<string> {
+  const ts = await loadTypeScriptModule();
+  if (!ts) return code;
+
+  const transpileResult = ts.transpileModule(code, {
+    compilerOptions: {
+      target: ts.ScriptTarget.ES2020,
+      module: ts.ModuleKind.ES2020,
+      strict: false,
+      removeComments: false,
+      sourceMap: false,
+      inlineSourceMap: false,
+    },
+    reportDiagnostics: true,
+  });
+
+  const diagnostics = transpileResult.diagnostics?.filter(
+    (d) => d.category === ts.DiagnosticCategory.Error,
+  );
+  if (diagnostics && diagnostics.length > 0) {
+    const message = diagnostics
+      .slice(0, 3)
+      .map((d) => ts.flattenDiagnosticMessageText(d.messageText, '\n'))
+      .join('; ');
+    throw new Error(`TypeScript transpilation failed: ${message}`);
+  }
+
+  return transpileResult.outputText;
+}
+
 /**
  * Strip import/export statements from generated code so it can run inside new Function().
  * The Function constructor has no module context, so ES module syntax causes:
@@ -47,10 +99,11 @@ export async function executeStrategy(
   try {
     // Strip import/export statements that can't run in Function constructor
     const cleanCode = sanitizeForExecution(typescriptCode);
+    const executableCode = await transpileForExecution(cleanCode);
 
     // Create a sandboxed function with the strategy code
     const wrappedCode = `
-      ${cleanCode}
+      ${executableCode}
 
       // Call the main strategy function
       if (typeof tradingStrategy === 'function') {
