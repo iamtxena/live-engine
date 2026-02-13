@@ -86,7 +86,7 @@ Additional requirements:
 - Include comprehensive error handling
 - ALL code must be self-contained with zero external dependencies`;
 
-  const userPrompt = `Convert this Python trading code to TypeScript:
+  const userPrompt = `Convert this Python trading code to runtime-safe JavaScript:
 
 \`\`\`python
 ${pythonCode}
@@ -94,7 +94,7 @@ ${pythonCode}
 
 ${context ? `\n**Strategy Context:**\n${context}` : ''}
 
-Provide a complete TypeScript implementation that:
+Provide a complete JavaScript implementation that:
 1. Maintains the exact same trading logic
 2. Is completely self-contained (NO import/export/require statements)
 3. Defines a "tradingStrategy(context)" function as the entry point

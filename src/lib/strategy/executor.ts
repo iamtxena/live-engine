@@ -97,9 +97,9 @@ export async function executeStrategy(
   context: StrategyContext,
 ): Promise<StrategyResult> {
   try {
-    // Strip import/export statements that can't run in Function constructor
-    const cleanCode = sanitizeForExecution(typescriptCode);
-    const executableCode = await transpileForExecution(cleanCode);
+    // Transpile first, then strip any module syntax injected by transpilation.
+    const transpiledCode = await transpileForExecution(typescriptCode);
+    const executableCode = sanitizeForExecution(transpiledCode);
 
     // Create a sandboxed function with the strategy code
     const wrappedCode = `
