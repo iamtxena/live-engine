@@ -9,17 +9,22 @@ import type {
 
 type TypeScriptModule = typeof import('typescript');
 
-let typeScriptModulePromise: Promise<TypeScriptModule | null> | null = null;
+let typeScriptModulePromise: Promise<TypeScriptModule> | null = null;
 
 /**
  * Lazily load TypeScript only when executing strategies.
  * This keeps startup lighter while allowing robust TS -> JS transpilation.
  */
-async function loadTypeScriptModule(): Promise<TypeScriptModule | null> {
+async function loadTypeScriptModule(): Promise<TypeScriptModule> {
   if (!typeScriptModulePromise) {
     typeScriptModulePromise = import('typescript')
       .then((mod) => mod.default ?? mod)
-      .catch(() => null);
+      .catch((error) => {
+        const detail = error instanceof Error ? error.message : String(error);
+        throw new Error(
+          `TypeScript runtime dependency is required for strategy transpilation. Ensure "typescript" is installed in production dependencies. Original error: ${detail}`,
+        );
+      });
   }
   return typeScriptModulePromise;
 }
@@ -31,7 +36,6 @@ async function loadTypeScriptModule(): Promise<TypeScriptModule | null> {
  */
 async function transpileForExecution(code: string): Promise<string> {
   const ts = await loadTypeScriptModule();
-  if (!ts) return code;
 
   const transpileResult = ts.transpileModule(code, {
     compilerOptions: {

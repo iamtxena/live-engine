@@ -34,7 +34,7 @@ export async function convertPythonToTypescript(
 
   const systemPrompt = `You are an expert Python and TypeScript developer specializing in algorithmic trading systems.
 
-Your task is to convert Python trading code to TypeScript that works with:
+Your task is to convert Python trading code to runtime-safe JavaScript that works with:
 - ccxt library for broker execution (Binance, Bybit, IBKR, etc.)
 - Plain JavaScript runtime semantics and proper error handling
 - Modern async/await patterns
