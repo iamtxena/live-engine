@@ -10,7 +10,7 @@ const { generateText: wrappedGenerateText, generateObject: wrappedGenerateObject
  * Schema for structured Python → TypeScript conversion
  */
 const conversionSchema = z.object({
-  typescript_code: z.string().describe('Converted TypeScript code'),
+  typescript_code: z.string().describe('Converted runtime-safe JavaScript code'),
   dependencies: z.array(z.string()).describe('Required npm packages'),
   notes: z.string().describe('Conversion notes and recommendations'),
   original_intent: z.string().describe('Summary of what the Python code does'),
@@ -34,9 +34,9 @@ export async function convertPythonToTypescript(
 
   const systemPrompt = `You are an expert Python and TypeScript developer specializing in algorithmic trading systems.
 
-Your task is to convert Python trading code to TypeScript that works with:
+Your task is to convert Python trading code to runtime-safe JavaScript that works with:
 - ccxt library for broker execution (Binance, Bybit, IBKR, etc.)
-- Type-safe interfaces and proper error handling
+- Plain JavaScript runtime semantics and proper error handling
 - Modern async/await patterns
 - Clean, production-ready code
 
@@ -45,9 +45,11 @@ The generated code runs inside a Function constructor (new Function()), NOT as a
 You MUST follow these rules:
 - Do NOT use import or export statements (they cause "Cannot use import statement outside a module")
 - Do NOT use "require()" calls
-- Define all helper functions, interfaces, and types inline
+- Do NOT use TypeScript-only syntax (no interfaces, type aliases, enums, generics, type annotations, or "as" assertions)
+- Output plain JavaScript that is valid in Node.js Function() execution
 - Implement indicator calculations (SMA, RSI, EMA, MACD, Bollinger Bands, etc.) as plain functions using Math and Array methods
 - The main entry point MUST be a function named "tradingStrategy" that takes a single "context" parameter and returns a result object
+- Do NOT reference external type names like Exchange, Order, Position, or Candle
 
 The context parameter has this shape:
 {
@@ -78,14 +80,13 @@ Backtrader to TypeScript mappings:
 
 Additional requirements:
 - Preserve the original trading logic exactly
-- Use TypeScript best practices (strict types, interfaces)
+- Keep the output JavaScript-only while preserving TypeScript-compatible structure
 - Convert pandas operations to native JavaScript/TypeScript
 - Convert numpy to native math operations
 - Include comprehensive error handling
-- Add type definitions for all functions and variables
 - ALL code must be self-contained with zero external dependencies`;
 
-  const userPrompt = `Convert this Python trading code to TypeScript:
+  const userPrompt = `Convert this Python trading code to runtime-safe JavaScript:
 
 \`\`\`python
 ${pythonCode}
@@ -93,7 +94,7 @@ ${pythonCode}
 
 ${context ? `\n**Strategy Context:**\n${context}` : ''}
 
-Provide a complete TypeScript implementation that:
+Provide a complete JavaScript implementation that:
 1. Maintains the exact same trading logic
 2. Is completely self-contained (NO import/export/require statements)
 3. Defines a "tradingStrategy(context)" function as the entry point
@@ -141,6 +142,7 @@ export async function validateTypescriptCode(typescriptCode: string): Promise<{
 - Trading logic bugs
 - Performance problems
 - Security vulnerabilities
+- Function-constructor compatibility (no import/export/require, runnable without module context)
 
 Respond with a JSON object containing:
 - isValid: boolean

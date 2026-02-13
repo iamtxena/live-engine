@@ -7,6 +7,63 @@ import type {
   StrategyResult,
 } from '@/lib/types/strategy';
 
+type TypeScriptModule = typeof import('typescript');
+
+let typeScriptModulePromise: Promise<TypeScriptModule> | null = null;
+
+/**
+ * Lazily load TypeScript only when executing strategies.
+ * This keeps startup lighter while allowing robust TS -> JS transpilation.
+ */
+async function loadTypeScriptModule(): Promise<TypeScriptModule> {
+  if (!typeScriptModulePromise) {
+    typeScriptModulePromise = import('typescript')
+      .then((mod) => mod.default ?? mod)
+      .catch((error) => {
+        typeScriptModulePromise = null;
+        const detail = error instanceof Error ? error.message : String(error);
+        throw new Error(
+          `TypeScript runtime dependency is required for strategy transpilation. Ensure "typescript" is installed in production dependencies. Original error: ${detail}`,
+        );
+      });
+  }
+  return typeScriptModulePromise;
+}
+
+/**
+ * Transpile generated TypeScript to JavaScript before executing in Function().
+ * This prevents parse errors like "Unexpected identifier 'Exchange'" caused by
+ * type annotations/interfaces emitted by AI conversion.
+ */
+async function transpileForExecution(code: string): Promise<string> {
+  const ts = await loadTypeScriptModule();
+
+  const transpileResult = ts.transpileModule(code, {
+    compilerOptions: {
+      target: ts.ScriptTarget.ES2020,
+      module: ts.ModuleKind.ES2020,
+      strict: false,
+      removeComments: false,
+      sourceMap: false,
+      inlineSourceMap: false,
+    },
+    reportDiagnostics: true,
+  });
+
+  const diagnostics = transpileResult.diagnostics?.filter(
+    (d) => d.category === ts.DiagnosticCategory.Error,
+  );
+  if (diagnostics && diagnostics.length > 0) {
+    const message = diagnostics
+      .slice(0, 3)
+      .map((d) => ts.flattenDiagnosticMessageText(d.messageText, '\n'))
+      .join('; ');
+    throw new Error(`TypeScript transpilation failed: ${message}`);
+  }
+
+  return transpileResult.outputText;
+}
+
 /**
  * Strip import/export statements from generated code so it can run inside new Function().
  * The Function constructor has no module context, so ES module syntax causes:
@@ -27,6 +84,7 @@ function sanitizeForExecution(code: string): string {
       if (trimmed.startsWith('export class ')) return line.replace('export class ', 'class ');
       if (trimmed.startsWith('export const ')) return line.replace('export const ', 'const ');
       if (trimmed.startsWith('export let ')) return line.replace('export let ', 'let ');
+      if (trimmed.startsWith('export var ')) return line.replace('export var ', 'var ');
       // Remove "export default" prefix
       if (trimmed.startsWith('export default ')) return line.replace('export default ', '');
       // Remove bare "export { ... }" re-exports
@@ -45,12 +103,13 @@ export async function executeStrategy(
   context: StrategyContext,
 ): Promise<StrategyResult> {
   try {
-    // Strip import/export statements that can't run in Function constructor
-    const cleanCode = sanitizeForExecution(typescriptCode);
+    // Transpile first, then strip any module syntax injected by transpilation.
+    const transpiledCode = await transpileForExecution(typescriptCode);
+    const executableCode = sanitizeForExecution(transpiledCode);
 
     // Create a sandboxed function with the strategy code
     const wrappedCode = `
-      ${cleanCode}
+      ${executableCode}
 
       // Call the main strategy function
       if (typeof tradingStrategy === 'function') {
