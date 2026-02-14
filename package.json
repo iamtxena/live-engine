@@ -11,6 +11,7 @@
     "lint:fix": "biome check --fix .",
     "format": "biome format --write .",
     "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/lib/internal/*.test.ts",
     "cli": "tsx src/cli/index.ts"
   },
   "dependencies": {
