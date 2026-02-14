@@ -100,6 +100,10 @@ function nextOrderId(): string {
   return id;
 }
 
+function nextProviderOrderId(orderId: string): string {
+  return `live-order-${orderId.replace(/^ord-/, '')}`;
+}
+
 function findDeployment(identifier: string): DeploymentContract | undefined {
   const direct = deployments.get(identifier);
   if (direct) {
@@ -176,7 +180,7 @@ export function placeOrder(input: PlaceOrderInput): OrderContract {
   const id = nextOrderId();
   const order: OrderContract = {
     id,
-    providerOrderId: `live-order-${id}`,
+    providerOrderId: nextProviderOrderId(id),
     symbol: input.symbol,
     side: input.side,
     type: input.type,
@@ -210,12 +214,9 @@ export function cancelOrder(identifier: string): OrderContract | null {
   return cloneContract(order);
 }
 
-function mapCancelTransition(current: OrderStatus): OrderStatus {
-  if (current === 'filled') {
-    return 'filled';
-  }
-  if (current === 'cancelled') {
-    return 'cancelled';
+export function mapCancelTransition(current: OrderStatus): OrderStatus {
+  if (current === 'filled' || current === 'cancelled' || current === 'rejected' || current === 'failed') {
+    return current;
   }
   return 'cancelled';
 }

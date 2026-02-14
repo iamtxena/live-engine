@@ -6,6 +6,7 @@ import {
   createDeployment,
   getDeployment,
   getOrder,
+  mapCancelTransition,
   placeOrder,
   resetExecutionStore,
   stopDeployment,
@@ -40,6 +41,7 @@ test('order lifecycle supports provider-id lookup and cancellation', () => {
     deploymentId: null,
   });
   assert.equal(order.status, 'pending');
+  assert.equal(order.providerOrderId, 'live-order-002');
 
   const fetched = getOrder(order.providerOrderId);
   assert.ok(fetched);
@@ -48,4 +50,12 @@ test('order lifecycle supports provider-id lookup and cancellation', () => {
   const cancelled = cancelOrder(order.providerOrderId);
   assert.ok(cancelled);
   assert.equal(cancelled.status, 'cancelled');
+});
+
+test('cancel transition preserves terminal order states', () => {
+  assert.equal(mapCancelTransition('pending'), 'cancelled');
+  assert.equal(mapCancelTransition('filled'), 'filled');
+  assert.equal(mapCancelTransition('cancelled'), 'cancelled');
+  assert.equal(mapCancelTransition('rejected'), 'rejected');
+  assert.equal(mapCancelTransition('failed'), 'failed');
 });

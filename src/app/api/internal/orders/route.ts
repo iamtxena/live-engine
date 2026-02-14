@@ -34,7 +34,9 @@ export async function POST(request: NextRequest) {
     if (!body.symbol || !body.side || !body.type || typeof body.quantity !== 'number') {
       return NextResponse.json({ error: 'Missing required order fields' }, { status: 400 });
     }
-    if (body.type === 'limit' && typeof body.price !== 'number') {
+    const hasValidLimitPrice =
+      body.price !== null && body.price !== undefined && typeof body.price === 'number' && Number.isFinite(body.price) && body.price > 0;
+    if (body.type === 'limit' && !hasValidLimitPrice) {
       return NextResponse.json({ error: 'Limit order requires price' }, { status: 400 });
     }
     const order = placeOrder({
